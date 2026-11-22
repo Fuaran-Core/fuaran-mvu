@@ -9,10 +9,9 @@ Every package this repository produces ships at the one `<Version>`. A change to
 contract ships on a version AHEAD of every version that has been tagged. The standing `<Version>` is a
 **draft slot** while it is untagged: an additive change rides it (its entry grows here, the number does
 not move), and a change of a higher class than the draft already carries advances it. A draft is not
-releasable by default: the release is a separate, recorded act, and nothing here has been tagged or
-published.
+releasable by default: the release is a separate, recorded act. 0.1.0 is the first release.
 
-## 0.1.0 — DRAFT
+## 0.1.0 — released 2026-11-22 as `v0.1.0`
 
 The first slot. Nothing before it was released. Phase 646 opened it with one package; Phase 647 added two
 (an additive change, which rides the draft). Phase 648 extended `Fuaran.MVU` with the gate over Core's registry,
