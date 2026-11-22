@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The React adapter's laws (Phase 720, DECISIONS.md D29), against a stand-in for React and the DOM written here: render
+    counts per drain, a yielded drain's continuation, hydration without a second initial render, unmount revocation,
+    the after-the-next-paint kind's one answer, hot reload, the element-view bridge and the slice hook. One file;
+    the runner is its last lines. `pwsh ./run.ps1` runs it on .NET (its tests stage) and transpiles it with the
+    repository's `fable` tool in Debug, which carries hot reload, and runs it under Node (its fable stage). No React
+    is installed or loaded: the adapter's live binding is inline, and nothing here calls it.
+
+    Built with `-p:FuaranMvuNegative=governed`, it compiles one more line: a governed-surface admission of a component
+    whose view is an element view. That build must FAIL; the gate builds it and requires the refusal (D29.5).
+-->
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(FuaranMvuNegative)' == 'governed'">
+    <DefineConstants>$(DefineConstants);NEGATIVE_GOVERNED</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- The check shape every law in this repository is written in, shared with the runtime's test hosts. -->
+    <Compile Include="../Fuaran.MVU.Tests/Shared/Check.fs" Link="Shared/Check.fs" />
+    <Compile Include="ReactLaws.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../src/Fuaran.MVU.React/Fuaran.MVU.React.fsproj" />
+  </ItemGroup>
+</Project>

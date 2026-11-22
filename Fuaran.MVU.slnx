@@ -1,0 +1,20 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Fuaran.MVU.Kernel/Fuaran.MVU.Kernel.fsproj" />
+    <Project Path="src/Fuaran.MVU/Fuaran.MVU.fsproj" />
+    <Project Path="src/Fuaran.MVU.Session/Fuaran.MVU.Session.fsproj" />
+    <Project Path="src/Fuaran.MVU.Testing/Fuaran.MVU.Testing.fsproj" />
+    <Project Path="src/Fuaran.MVU.React/Fuaran.MVU.React.fsproj" />
+    <Project Path="src/Fuaran.MVU.Browser/Fuaran.MVU.Browser.fsproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Fuaran.MVU.Tests/Fuaran.MVU.Tests.fsproj" />
+    <Project Path="tests/Fuaran.MVU.Tests/Fable/Fuaran.MVU.Tests.Fable.fsproj" />
+    <Project Path="tests/Fuaran.MVU.Tests/Node/Fuaran.MVU.Tests.Node.fsproj" />
+    <Project Path="tests/Fuaran.MVU.React.Tests/Fuaran.MVU.React.Tests.fsproj" />
+    <Project Path="tests/Fuaran.MVU.Browser.Tests/Fuaran.MVU.Browser.Tests.fsproj" />
+  </Folder>
+  <Folder Name="/proofs/">
+    <Project Path="proofs/oracle/Custard.fsproj" />
+  </Folder>
+</Solution>

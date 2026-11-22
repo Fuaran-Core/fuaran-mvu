@@ -1,0 +1,35 @@
+<Project>
+  <PropertyGroup>
+    <!-- Central package versions (Directory.Packages.props) for every project of this repository except the
+         proof oracle: proofs/oracle/Custard.fsproj is written by the prover and held byte for byte, so it
+         carries its own FSharp.Core reference and nothing here may inject into it. -->
+    <ManagePackageVersionsCentrally Condition="'$(MSBuildProjectName)' != 'Custard'">true</ManagePackageVersionsCentrally>
+    <!-- Warnings are errors in the code this repository writes. The generated oracle is exempt: its matches
+         are total by proof, not by syntax, and the proof leg itself drops FS0025 from its #nowarn line so an
+         incomplete match is seen there rather than hidden. -->
+    <TreatWarningsAsErrors Condition="'$(MSBuildProjectName)' != 'Custard'">true</TreatWarningsAsErrors>
+    <WarningsAsErrors Condition="'$(MSBuildProjectName)' != 'Custard'">$(WarningsAsErrors);FS0025</WarningsAsErrors>
+    <WarnOn>3390;$(WarnOn)</WarnOn>
+    <!-- The version every package in this repository ships at. 0.1.0 is a DRAFT slot: untagged, unpublished
+         and not releasable by default. An additive change rides it; a change of a higher class than the
+         draft already carries advances it. STABILITY.md heads the slot and records what it holds. -->
+    <Version>0.1.0</Version>
+    <Authors>Andrew J. Willshire</Authors>
+    <Company>Diametrical Ltd</Company>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <Copyright>Copyright 2026 Diametrical Ltd</Copyright>
+    <PackageProjectUrl>https://github.com/Fuaran-Core/fuaran-mvu</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Fuaran-Core/fuaran-mvu</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <Nullable>disable</Nullable>
+    <!-- Where the Fuaran.Core.* pins restore from (Phase 648): the public registry, nuget.org. This repository
+         has no nuget.config and never reaches a local feed; the estate's pin checks read this declaration. -->
+    <FuaranRestorePath>public</FuaranRestorePath>
+  </PropertyGroup>
+  <!-- Fable source distribution: a packable project ships its source and project file under fable/ in the
+       package, so a Fable-compiled consumer compiles the package from source beside the lib/ assembly. -->
+  <ItemGroup Condition="'$(IsPackable)' == 'true' And '$(MSBuildProjectExtension)' == '.fsproj' And '$(MSBuildProjectName)' != 'Custard'">
+    <Content Include="$(MSBuildProjectFile)" PackagePath="fable\" />
+    <Content Include="*.fs" PackagePath="fable\" />
+  </ItemGroup>
+</Project>

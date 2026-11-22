@@ -1,0 +1,29 @@
+Fuaran.MVU - a model-update-view runtime with a proved kernel
+Copyright 2026 Diametrical Ltd
+
+This product includes software developed at Diametrical Ltd.
+
+The architecture this library implements (a model, an update function, a view, and effects and
+long-lived subscriptions requested by the update function) follows the Elm Architecture as
+realised for F# by Fable.Elmish (https://github.com/elmish/elmish), Copyright (c) Eugene Tolmachev
+and contributors, licensed under the Apache License, Version 2.0. Any file in this repository that
+descends from that code carries its copyright line beside this project's.
+
+The kernel's fixed-capacity ring and keyed diff, and their F* models, are adapted from the ring buffer,
+the subscription diff and the proved ring models of the ToolUp Analytics open-source SDK, toolup-forge
+(https://github.com/ToolUp-Analytics/toolup-forge), Copyright (c) Andrew J. Willshire / ToolUp
+Analytics Ltd (UK), itself derived from Fable.Elmish, licensed under the Apache License, Version 2.0.
+Any file in this repository that descends from that code carries both copyright lines beside this
+project's.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.

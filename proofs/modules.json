@@ -1,0 +1,96 @@
+{
+  "kind": "proofModules",
+  "subject": "Fuaran.MVU",
+  "$comment": "The proof leg's ROSTER, and the only one: proofs/check.ps1 reads the modules it checks from this array, in its order, so a model follows every module it opens; on the custard leg the order is also part of the committed oracle's bytes. Each entry's `kind` is `extracted` (checked, extracted to proofs/oracle/, diffed) or `proofOnly` (checked only), and `opens` lists the registered modules its code references. What the leg COSTS, per module: every green CHECK line prints the module's measured seconds beside `budgetSeconds`, and an overshoot is a recorded COST finding, never a red leg. How the leg reads every number here is stated once, in the kit engine's header. This is NOT proofs.json: a wall-clock budget is a claim at none of the ladder's levels.",
+  "seeding": {
+    "rule": "budgetSeconds = max(2 x the slowest observed cold-cache run, minimumBudgetSeconds), rounded up to the next 10s.",
+    "toleranceFactor": 2,
+    "minimumBudgetSeconds": 20,
+    "$comment": "The tolerance is applied ONCE, here, when a number is seeded; the leg multiplies nothing. Seeded from the slowest cold run observed on the development machine during Phase 646, with --quake 3; every model here checks in well under the floor, so each budget is the floor."
+  },
+  "cachedRead": {
+    "rule": "thresholdSeconds = about twice the slowest CACHED read you measure on the pinned prover; appliesFromFastestSeconds = three times the threshold.",
+    "thresholdSeconds": 1.0,
+    "appliesFromFastestSeconds": 3,
+    "$comment": "The reference repository's numbers, kept: every model here is under the appliesFrom floor, so the threshold applies to none of them yet. Re-seed from a measured cached read when a model grows past the floor."
+  },
+  "contentionSeeding": {
+    "rule": "threshold = a number above the median ratio of a measured QUIET pass on the SLOWEST machine that runs this leg, and at or below the median ratio of the contention worth naming.",
+    "threshold": 0.8,
+    "minimumSamples": 3,
+    "minimumSeconds": 5,
+    "quietFactor": "not yet measured: no module here runs long enough (minimumSeconds) to contribute a sample",
+    "quietPhase": "fuaran-core#646",
+    "$comment": "The reference repository's numbers, kept until a model here runs long enough for a label to mean anything."
+  },
+  "modules": [
+    {
+      "module": "Drain",
+      "kind": "extracted",
+      "opens": [],
+      "budgetSeconds": 20,
+      "measuredSeconds": 4,
+      "fastestSeconds": 4,
+      "fastestPhase": "fuaran-core#646",
+      "phase": "fuaran-core#646",
+      "note": "The drain buffer: a list of slots with two cursors; FIFO over any sequence, the reset agrees with emptiness, a resumed run is the same run, slots outside the window are clear. Pointwise list lemmas closed by extensionality; fuel 0 by default, fuel 1 in the lemma sections. Cheap and linear."
+    },
+    {
+      "module": "FixedRing",
+      "kind": "extracted",
+      "opens": [],
+      "budgetSeconds": 20,
+      "measuredSeconds": 6,
+      "fastestSeconds": 6,
+      "fastestPhase": "fuaran-core#646",
+      "phase": "fuaran-core#646",
+      "note": "The fixed-capacity ring, adapted from the reference ring's list model: cyclic window vocabulary (dist, iter, window, in_window), a bounded FIFO over any sequence with push verdicts, refusal exactly when full. Linear arithmetic throughout; the lemma section runs at fuel 2 for the window's two-step unfoldings."
+    },
+    {
+      "module": "KeyedDiff",
+      "kind": "extracted",
+      "opens": [],
+      "budgetSeconds": 20,
+      "measuredSeconds": 6,
+      "fastestSeconds": 6,
+      "fastestPhase": "fuaran-core#646",
+      "phase": "fuaran-core#646",
+      "note": "The keyed resource diff over sorted entry lists: the plan's three filters and the result of applying it, with the per-key specs, keys-after, plan-twice-empty, sequence shape and the identity skip. Membership reasoning over filters with quantified lemmas; fuel 1 in the lemma section."
+    },
+    {
+      "module": "StepChain",
+      "kind": "extracted",
+      "opens": [],
+      "budgetSeconds": 20,
+      "measuredSeconds": 1,
+      "fastestSeconds": 1,
+      "fastestPhase": "fuaran-core#647",
+      "phase": "fuaran-core#647",
+      "note": "The chain of a step: follow-ups first-in first-out with fuel, the effects in emission order; bounded, monotone in the fuel, and whole. Structural induction on the fuel; fuel 1 throughout the lemma section."
+    },
+    {
+      "module": "StepMachine",
+      "kind": "extracted",
+      "opens": [
+        "Chain"
+      ],
+      "budgetSeconds": 20,
+      "measuredSeconds": 5,
+      "fastestSeconds": 5,
+      "fastestPhase": "fuaran-core#647",
+      "phase": "fuaran-core#647",
+      "note": "The step machine over a queue list: acceptance with a token check, the step (chain, plan, decision, commit/park/refuse), the drain with fuel and one render, termination. Two invariants (accepted = updated ++ queue; every token below the next) carried through every operation; the seven guarantees as corollaries. Record projections and list lemmas; fuel 1 in the lemma section."
+    },
+    {
+      "module": "Authority",
+      "kind": "extracted",
+      "opens": [],
+      "budgetSeconds": 20,
+      "measuredSeconds": 1,
+      "fastestSeconds": 1,
+      "fastestPhase": "fuaran-core#648",
+      "phase": "fuaran-core#648",
+      "note": "The gate: a principal's registry as the host's tightened by restrictions, the step decided as the join of the policy, the grant verdict and every invocation's registry verdict, and the grant presented. The join is a parameter under Core's definition as the premise; the theorems are rank inequalities over two folds, discharged by induction on the restrictions and the invocations at fuel 1."
+    }
+  ]
+}

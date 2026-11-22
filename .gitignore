@@ -1,0 +1,16 @@
+bin/
+obj/
+*.user
+.vs/
+.idea/
+.ionide/
+artifacts/
+fable_modules/
+node_modules/
+# The proof kit: the prover install, the materialised asset and the checked-module cache are not source.
+proofs/.fstar/
+proofs/.kit/
+proofs/obj/
+# The Fable test projects: generated JavaScript.
+tests/Fuaran.MVU.Tests/Fable/output/
+tests/Fuaran.MVU.Tests/Node/output/

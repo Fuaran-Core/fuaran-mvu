@@ -1,0 +1,104 @@
+name: Publish packages
+
+# Pushes the six Fuaran.MVU packs to nuget.org, the public, no-auth-restore distribution channel: Fuaran.MVU.Kernel,
+# Fuaran.MVU, Fuaran.MVU.Testing, Fuaran.MVU.Session, Fuaran.MVU.React and Fuaran.MVU.Browser, all at one version.
+# Triggered by a tag push matching `v*` (the "ship this release" gesture) or by workflow_dispatch (the
+# rerun-against-an-existing-tag escape hatch). Nothing here is reachable from an ordinary branch push: a push to a
+# branch creates no tag, so publication stays a deliberate act rather than a side effect of landing work.
+#
+# The version baked into every pack is the <Version> property in Directory.Build.props at the tagged commit. A tag
+# naming another version is refused before anything is packed.
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  # `id-token: write` lets the job request the GitHub OIDC token that nuget.org's Trusted Publishing exchange turns
+  # into a short-lived API key.
+  id-token: write
+
+jobs:
+  # No `environment:`: the nuget.org Trusted Publishing policy names none, and a policy naming none never matches a
+  # job that declares one.
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Refuse a tag that does not name <Version>
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: pwsh
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $version = (Select-Xml -Path Directory.Build.props -XPath '//PropertyGroup/Version' | Select-Object -First 1).Node.InnerText.Trim()
+          if ($env:TAG -ne "v$version") { throw "the tag $($env:TAG) does not name Directory.Build.props's <Version> $version" }
+
+      # The gate before the pack: format, build, the laws and the differential on .NET and under Node, and the Fable
+      # legs. The proof leg (the pinned F* kit) is skipped here: it needs the prover, and it runs in the release's own
+      # local gate on the tagged commit before the tag is pushed.
+      - name: Gate
+        shell: pwsh
+        run: ./run.ps1 -SkipProofs
+
+      # The packable projects, named rather than packing the solution, which would also walk the test projects and the
+      # oracle project.
+      - name: Pack
+        run: |
+          for p in Fuaran.MVU.Kernel Fuaran.MVU Fuaran.MVU.Testing Fuaran.MVU.Session Fuaran.MVU.React Fuaran.MVU.Browser; do
+            dotnet pack "src/$p/$p.fsproj" -c Release -o "$GITHUB_WORKSPACE/artifacts" --nologo
+          done
+
+      # Auth is Trusted Publishing (OIDC): a policy on nuget.org (repository owner / repository / this workflow's file
+      # name / the package ids) exchanges the job's OIDC token for a one-hour API key, with no long-lived key secret to
+      # rotate. `user` is the nuget.org profile name the policy belongs to. The login sits immediately before the push
+      # so the temporary key cannot expire mid-run. An unregistered policy fails loudly here, which reads as an auth
+      # error: on a first release, check the policy exists before checking anything else.
+      - name: NuGet login (OIDC to a temporary API key)
+        uses: NuGet/login@v1
+        id: nuget-login
+        with:
+          user: ajwillshire # the policy owner (a nuget.org profile name is public, not a secret)
+
+      - name: Push to nuget.org
+        run: |
+          # Push from the repository-local artifacts directory the Pack step wrote, never a shared folder feed.
+          shopt -s nullglob
+          pkgs=("$GITHUB_WORKSPACE"/artifacts/*.nupkg)
+          if [ ${#pkgs[@]} -ne 6 ]; then
+            echo "expected 6 .nupkg files in artifacts/, found ${#pkgs[@]}" >&2
+            exit 1
+          fi
+          # This workflow publishes exactly the six Fuaran.MVU ids. Anything else reaching this loop means the output
+          # directory was re-pointed somewhere shared: refuse rather than publish it.
+          for pkg in "${pkgs[@]}"; do
+            case "$(basename "$pkg")" in
+              Fuaran.MVU.[0-9]*.nupkg|Fuaran.MVU.Kernel.[0-9]*.nupkg|Fuaran.MVU.Testing.[0-9]*.nupkg|Fuaran.MVU.Session.[0-9]*.nupkg|Fuaran.MVU.React.[0-9]*.nupkg|Fuaran.MVU.Browser.[0-9]*.nupkg) ;;
+              *)
+                echo "refusing to push unexpected package: $(basename "$pkg")" >&2
+                exit 1
+                ;;
+            esac
+          done
+          for pkg in "${pkgs[@]}"; do
+            dotnet nuget push "$pkg" \
+              --source https://api.nuget.org/v3/index.json \
+              --api-key ${{ steps.nuget-login.outputs.NUGET_API_KEY }} \
+              --skip-duplicate
+          done

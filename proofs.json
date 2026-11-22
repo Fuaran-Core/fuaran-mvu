@@ -1,0 +1,1003 @@
+{
+  "kind": "proofs",
+  "subject": "Fuaran.MVU",
+  "$comment": "The repository's claims ladder, as data: what is PROVED, what is only TESTED, what is ASSUMED and what is POLICY, in the schema the proof kit's LADDER.md specifies. Each row says what it claims in `statement` and what it does NOT cover in `boundary`. Levels are the closed set proved | tested | assumed | policy. Authored by hand; the Proofs.Ladder family in tests/Fuaran.MVU.Tests/Ladder.fs holds every row to the tree (a proved row's theorem is a top-level declaration of the model it names, that model is on the roster, every checked model has a proved row, a tested row's cases exist in its family, a policy row's document exists), with a go-red fixture beside each clause. The prose stays a human act.",
+  "claims": [
+    {
+      "id": "drain-fifo",
+      "level": "proved",
+      "statement": "Over ANY sequence of pushes and pops, a well-formed drain buffer produces exactly the outputs the reference first-in first-out queue produces from the buffer's unread contents, and ends well-formed holding exactly what that queue holds: every pushed item is popped exactly once, in push order, nothing is lost and nothing is invented, through every compaction and every growth. The abstraction is `unread`, the slots from the read cursor up to the write cursor.",
+      "boundary": "Requires `wf`, which `create` establishes and every operation preserves. Says nothing about the host that calls the buffer: one operation at a time is the host's premise (host-serialises-the-queues). The item type is abstract; nothing about items is used.",
+      "phase": "fuaran-core#646",
+      "evidence": {
+        "theorem": "drain_is_queue",
+        "supporting": [
+          "push_spec",
+          "pop_spec",
+          "create_wf",
+          "unread_spec"
+        ],
+        "model": "proofs/Drain.fst",
+        "prover": "proofs/proofs-kit.json"
+      }
+    },
+    {
+      "id": "drain-reset-agrees-with-empty",
+      "level": "proved",
+      "statement": "On a well-formed drain buffer the two cursors are both zero exactly when the unread contents are empty: the reset happens when, and only when, the queue is empty.",
+      "boundary": "Requires `wf`. A statement about the cursors, not about the backing array's slots (cleared-outside-window is).",
+      "phase": "fuaran-core#646",
+      "evidence": {
+        "theorem": "reset_agrees_with_empty",
+        "model": "proofs/Drain.fst",
+        "prover": "proofs/proofs-kit.json"
+      }
+    },
+    {
+      "id": "drain-yield-drops-nothing",
+      "level": "proved",
+      "statement": "A run over some operations that stops, and resumes over the rest from the state it left, is the run over the whole sequence: the same final state, and the outputs of the two parts in order. The state between the two parts IS the backlog a yield carries, so nothing is dropped across a yield and order is kept.",
+      "boundary": "Unconditional on the state (no `wf` needed). A yield here is the absence of operations between two runs; what a host does while yielded (render, schedule) is outside the model.",
+      "phase": "fuaran-core#646",
+      "evidence": {
+        "theorem": "run_append",
+        "model": "proofs/Drain.fst",
+        "prover": "proofs/proofs-kit.json"
+      }
+    },
+    {
+      "id": "drain-cleared-outside-window",
+      "level": "proved",
+      "statement": "After any run from a well-formed drain buffer, every slot outside the unread window holds no item: the buffer keeps no reference to an item it has handed over.",
+      "boundary": "Requires `wf` at the start. `Placeholder` models `Unchecked.defaultof`; that the runtime then collects the item is the runtime's.",
+      "phase": "fuaran-core#646",
+      "evidence": {
+        "theorem": "cleared_outside_window",
+        "model": "proofs/Drain.fst",
+        "prover": "proofs/proofs-kit.json"
+      }
+    },
+    {
+      "id": "drain-placeholder-unobserved",
+      "level": "proved",
+      "statement": "A pop on a well-formed drain buffer never returns a placeholder slot: what comes out was pushed.",
+      "boundary": "Requires `wf`.",
+      "phase": "fuaran-core#646",
+      "evidence": {
+        "theorem": "placeholder_unobserved",
+        "model": "proofs/Drain.fst",
+        "prover": "proofs/proofs-kit.json"
+      }
+    },
+    {
+      "id": "drain-take-is-pop",
+      "level": "proved",
+      "statement": "On a non-empty well-formed drain buffer, `Take` leaves the buffer `Pop` leaves and returns the item `Pop` returns.",
+      "boundary": "Requires `wf` and a non-empty buffer; the shipped `Take` refuses an empty buffer with an exception, which the model does not state.",
+      "phase": "fuaran-core#646",
+      "evidence": {
+        "theorem": "take_is_pop",
+        "model": "proofs/Drain.fst",
+        "prover": "proofs/proofs-kit.json"
+      }
+    },
+    {
+      "id": "ring-bounded-fifo",
+      "level": "proved",
+      "statement": "Over ANY sequence of pushes and pops, a well-formed fixed-capacity ring produces exactly the outputs the reference first-in first-out queue of its capacity produces from the ring's unread contents — every popped slot and every push verdict — and ends well-formed, at the same capacity, holding exactly what that queue holds: every accepted item is popped exactly once, in push order, and a push is refused exactly when the queue is full. The abstraction is `unread`, the slots from the read head up to the write head, cyclically.",
+      "boundary": "Requires `wf`, which `create` establishes and every operation preserves. One operation at a time is the host's premise (host-serialises-the-queues). The item type is abstract.",
+      "phase": "fuaran-core#646",
+      "evidence": {
+        "theorem": "ring_is_bounded_queue",
+        "supporting": [
+          "push_spec",
+          "pop_spec",
+          "create_wf"
+        ],
+        "model": "proofs/FixedRing.fst",
+        "prover": "proofs/proofs-kit.json"
+      }
+    },
+    {
+      "id": "ring-push-refused-iff-full",
+      "level": "proved",
+      "statement": "A push on a well-formed ring is refused if and only if the ring holds exactly `capacity` items.",
+      "boundary": "Requires `wf`. `capacity` is the configured capacity (the slot count less the spare slot), floored at one by `create`.",
+      "phase": "fuaran-core#646",
+      "evidence": {
+        "theorem": "push_refused_iff_full",
+        "model": "proofs/FixedRing.fst",
+        "prover": "proofs/proofs-kit.json"
+      }
+    },
+    {
+      "id": "ring-refused-push-unchanged",
+      "level": "proved",
+      "statement": "A refused push leaves the ring exactly as it was: the same slots, the same heads, the same state.",
+      "boundary": "Requires `wf`. Stated as equality of the whole model state, so it covers the slots as well as the unread contents.",
+      "phase": "fuaran-core#646",
+      "evidence": {
+        "theorem": "refused_push_unchanged",
+        "model": "proofs/FixedRing.fst",
+        "prover": "proofs/proofs-kit.json"
+      }
+    },
+    {
+      "id": "ring-placeholder-unobserved",
+      "level": "proved",
+      "statement": "A pop on a well-formed ring never returns a placeholder slot: what comes out was pushed.",
+      "boundary": "Requires `wf`.",
+      "phase": "fuaran-core#646",
+      "evidence": {
+        "theorem": "placeholder_unobserved",
+        "model": "proofs/FixedRing.fst",
+        "prover": "proofs/proofs-kit.json"
+      }
+    },
+    {
+      "id": "ring-cleared-outside-window",
+      "level": "proved",
+      "statement": "After any run from a well-formed ring, every slot outside the unread window holds no item, and an empty ring holds none at all.",
+      "boundary": "Requires `wf` at the start.",
+      "phase": "fuaran-core#646",
+      "evidence": {
+        "theorem": "cleared_outside_window",
+        "model": "proofs/FixedRing.fst",
+        "prover": "proofs/proofs-kit.json"
+      }
+    },
+    {
+      "id": "diff-start-spec",
+      "level": "proved",
+      "statement": "The plan's `starts` holds exactly the wanted entries whose key is not running under that description and not held under it — for every key and description, as an if-and-only-if.",
+      "boundary": "Unconditional on the maps. Says which entries start, not in what order (diff-sequence-shape does).",
+      "phase": "fuaran-core#646",
+      "evidence": {
+        "theorem": "start_spec",
+        "model": "proofs/KeyedDiff.fst",
+        "prover": "proofs/proofs-kit.json"
+      }
+    },
+    {
+      "id": "diff-stop-spec",
+      "level": "proved",
+      "statement": "The plan's `stops` holds exactly the keys of running entries whose key is no longer wanted, or is wanted under another description.",
+      "boundary": "Unconditional on the maps.",
+      "phase": "fuaran-core#646",
+      "evidence": {
+        "theorem": "stop_spec",
+        "model": "proofs/KeyedDiff.fst",
+        "prover": "proofs/proofs-kit.json"
+      }
+    },
+    {
+      "id": "diff-keep-spec",
+      "level": "proved",
+      "statement": "The plan's `keeps` holds exactly the keys of running entries wanted under the same description.",
+      "boundary": "Unconditional on the maps.",
+      "phase": "fuaran-core#646",
+      "evidence": {
+        "theorem": "keep_spec",
+        "model": "proofs/KeyedDiff.fst",
+        "prover": "proofs/proofs-kit.json"
+      }
+    },
+    {
+      "id": "diff-restart-spec",
+      "level": "proved",
+      "statement": "A key is both stopped and started — a restart — exactly when it is running under one description and wanted under another that it is not held under.",
+      "boundary": "Requires the running and wanted lists to have distinct keys (maps).",
+      "phase": "fuaran-core#646",
+      "evidence": {
+        "theorem": "restart_spec",
+        "model": "proofs/KeyedDiff.fst",
+        "prover": "proofs/proofs-kit.json"
+      }
+    },
+    {
+      "id": "diff-keys-after-are-wanted",
+      "level": "proved",
+      "statement": "After the plan is applied, a key is running or held exactly when it is wanted, and never both; the separation of held from running keys is preserved; and when nothing is held and every start succeeds, what runs is exactly the wanted map.",
+      "boundary": "Requires the wanted map to have distinct keys and the held keys to be disjoint from the running keys (`separate`), which this theorem shows is preserved. The outcome of a start is the parameter `start` (start-outcome-is-a-function).",
+      "phase": "fuaran-core#646",
+      "evidence": {
+        "theorem": "keys_after_are_wanted",
+        "supporting": [
+          "after_spec",
+          "apply"
+        ],
+        "model": "proofs/KeyedDiff.fst",
+        "prover": "proofs/proofs-kit.json"
+      }
+    },
+    {
+      "id": "diff-held-unchanged-not-started",
+      "level": "proved",
+      "statement": "A key held under a description that is still wanted is not in `starts`: a start that threw is not tried again until its description changes.",
+      "boundary": "A hold on a key that is no longer wanted, or wanted under another description, is dropped by `apply`; a key that leaves and returns under the same description is tried again (DECISIONS.md D25).",
+      "phase": "fuaran-core#646",
+      "evidence": {
+        "theorem": "held_unchanged_not_started",
+        "model": "proofs/KeyedDiff.fst",
+        "prover": "proofs/proofs-kit.json"
+      }
+    },
+    {
+      "id": "diff-plan-twice-empty",
+      "level": "proved",
+      "statement": "The plan computed again after applying it, against the same wanted map, is empty: nothing to stop, nothing to start, and every running key kept.",
+      "boundary": "Requires distinct wanted keys and `separate`. Covers the plan; diff-identity-skip-agrees covers the state.",
+      "phase": "fuaran-core#646",
+      "evidence": {
+        "theorem": "plan_twice_empty",
+        "model": "proofs/KeyedDiff.fst",
+        "prover": "proofs/proofs-kit.json"
+      }
+    },
+    {
+      "id": "diff-sequence-shape",
+      "level": "proved",
+      "statement": "The sequence a host performs is every stop, then every start; and when the running and wanted maps are in key order, each half is in key order too, so the result is the same on every host.",
+      "boundary": "Key order is any relation `lt`; no law of it is needed here. That F#'s `Map` enumerates in `compare` order is the host's (key-order-is-irreflexive).",
+      "phase": "fuaran-core#646",
+      "evidence": {
+        "theorem": "sequence_shape",
+        "supporting": [
+          "filter_sorted"
+        ],
+        "model": "proofs/KeyedDiff.fst",
+        "prover": "proofs/proofs-kit.json"
+      }
+    },
+    {
+      "id": "diff-identity-skip-agrees",
+      "level": "proved",
+      "statement": "Applying the plan again against the same wanted map changes nothing: what runs and what is held are exactly as before. A host that skips the diff when the model is the same instance, so the wanted map is the one it last applied, agrees with the general path.",
+      "boundary": "Requires distinct wanted keys and `separate`. That the same model instance yields the same wanted map is the host's premise (resources are a function of the model).",
+      "phase": "fuaran-core#646",
+      "evidence": {
+        "theorem": "identity_skip_agrees",
+        "model": "proofs/KeyedDiff.fst",
+        "prover": "proofs/proofs-kit.json"
+      }
+    },
+    {
+      "id": "diff-sorted-is-a-map",
+      "level": "proved",
+      "statement": "Under an irreflexive key order, a key list in key order is duplicate-free: a sorted list of entries is a map.",
+      "boundary": "The one law of the key order the model uses, taken as a hypothesis.",
+      "phase": "fuaran-core#646",
+      "evidence": {
+        "theorem": "sorted_distinct",
+        "model": "proofs/KeyedDiff.fst",
+        "prover": "proofs/proofs-kit.json"
+      }
+    },
+    {
+      "id": "drain-agrees-with-kernel",
+      "level": "tested",
+      "statement": "The extracted drain model and the shipped `DrainBuffer` answer the same pops in the same order, hold the same backlog and rest with the same cursors over generated sequences: the only evidence that the proved model is about the code that ships.",
+      "boundary": "Agreement over the inputs drawn (60 seeds of 250 steps on .NET and under Fable), never over all inputs.",
+      "phase": "fuaran-core#646",
+      "evidence": {
+        "family": "Proofs.Oracle",
+        "cases": [
+          "Proofs.Oracle drain: the extracted model and DrainBuffer answer alike over generated sequences",
+          "Proofs.Oracle drain: the model is a queue (go-red control: a wrong reference disagrees)"
+        ],
+        "model": "proofs/Drain.fst"
+      }
+    },
+    {
+      "id": "ring-agrees-with-kernel",
+      "level": "tested",
+      "statement": "The extracted ring model and the shipped `FixedRing` give the same push verdicts and the same pops in the same order, at the same capacity, over generated sequences.",
+      "boundary": "Agreement over the inputs drawn, never over all inputs.",
+      "phase": "fuaran-core#646",
+      "evidence": {
+        "family": "Proofs.Oracle",
+        "cases": [
+          "Proofs.Oracle ring: the extracted model and FixedRing answer alike over generated sequences",
+          "Proofs.Oracle ring: a refused push changes nothing in the model"
+        ],
+        "model": "proofs/FixedRing.fst"
+      }
+    },
+    {
+      "id": "diff-agrees-with-kernel",
+      "level": "tested",
+      "statement": "The extracted diff model and the shipped `ResourceDiff.plan` and `ResourceDiff.apply` compute the same stops, keeps and starts, and the same running and held maps afterwards, over generated maps with a generated start outcome.",
+      "boundary": "Agreement over the inputs drawn (80 seeds over eight keys), never over all inputs; the kernel's `apply` is driven with the plan it computed, the model's with the maps.",
+      "phase": "fuaran-core#646",
+      "evidence": {
+        "family": "Proofs.Oracle",
+        "cases": [
+          "Proofs.Oracle diff: the extracted plan and ResourceDiff.plan agree over generated maps",
+          "Proofs.Oracle diff: the sequence is every stop then every start (go-red control)"
+        ],
+        "model": "proofs/KeyedDiff.fst"
+      }
+    },
+    {
+      "id": "models-fingerprint-across-hosts",
+      "level": "tested",
+      "statement": "The six extracted models, driven over one fixed corpus, fold every answer into one number that is the same on .NET and under Fable: Fable's transpilation of each model is held to the .NET run of it. The step machine's round drives the chain through the machine; the gate's round decides drawn steps under drawn restrictions, under two ceilings, as dispatches and as presentations of drawn grants, with the join written out as Core defines it.",
+      "boundary": "One corpus; a transpilation defect that changes no answer on it is not seen.",
+      "phase": "fuaran-core#647",
+      "evidence": {
+        "family": "Proofs.Oracle",
+        "cases": [
+          "Proofs.Oracle fingerprint: the models fingerprint alike on .NET and under Fable"
+        ]
+      }
+    },
+    {
+      "id": "kernel-laws-on-both-hosts",
+      "level": "tested",
+      "statement": "The kernel's laws — each queue against a reference queue over generated sequences, a backlog across a yield, the refusal exactly when full, the diff's five statements over small maps, the identity skip — pass over the shipped code on .NET and under Fable, from one list run on both hosts.",
+      "boundary": "Tests over drawn inputs; the proofs are the general statements.",
+      "phase": "fuaran-core#646",
+      "evidence": {
+        "family": "Suite:Laws.cases",
+        "cases": [
+          "drain: a buffer answers as a FIFO queue over generated sequences",
+          "drain: a backlog survives a yield in order",
+          "drain: Take on an empty buffer is refused",
+          "drain: the capacity floor",
+          "ring: a ring answers as a bounded FIFO queue over generated sequences",
+          "ring: a refused push changes nothing",
+          "ring: the capacity floor",
+          "diff: start, stop, keep and restart are exactly as specified",
+          "diff: the keys afterwards are exactly the keys wanted",
+          "diff: a held key with an unchanged description is not started",
+          "diff: the plan applied twice is empty the second time",
+          "diff: every stop precedes every start, in key order",
+          "diff: the identity skip agrees with the general path"
+        ]
+      }
+    },
+    {
+      "id": "extractor-and-compiler-trusted",
+      "level": "assumed",
+      "statement": "The code the differential runs is the extraction the prover wrote, held byte for byte to a fresh run; every proved row stands on the F* extractor and the F# compiler being correct.",
+      "boundary": "Nothing verifies that extraction preserves meaning; no row discharges it.",
+      "phase": "fuaran-core#646",
+      "class": "premise",
+      "evidence": {
+        "assumption": "the F* extractor (Custard's F# backend) and the F# compiler are correct"
+      }
+    },
+    {
+      "id": "host-serialises-the-queues",
+      "level": "assumed",
+      "statement": "The drain buffer and the fixed ring are operated one operation at a time: a browser host's re-entrancy latch, a .NET host's lock, a connection's lock, a device's masked interrupts or single producer. The models state sequences of operations and nothing about two at once.",
+      "boundary": "True concurrency is not expressible here and is the host's to discharge; the kernel ships no lock.",
+      "phase": "fuaran-core#646",
+      "class": "premise",
+      "evidence": {
+        "assumption": "every host delivers the kernel's queue operations one at a time"
+      }
+    },
+    {
+      "id": "start-outcome-is-a-function",
+      "level": "assumed",
+      "statement": "The outcome of starting a resource — it came up, or it threw — is modelled as a function of the key and the description. A real start is effectful and may fail for reasons outside its arguments; the differential drives both sides with the same outcome function.",
+      "boundary": "What a started instance does, and what disposing a stopped one does, is the host's and is not modelled; the model carries no handles.",
+      "phase": "fuaran-core#646",
+      "class": "premise",
+      "evidence": {
+        "assumption": "a start's verdict depends on its key and description alone, for the purposes of the plan"
+      }
+    },
+    {
+      "id": "key-order-is-irreflexive",
+      "level": "assumed",
+      "statement": "The host's key comparison is a strict order, so a map enumerates each key once in increasing order. F#'s `Map` under `compare` is one.",
+      "boundary": "The model takes irreflexivity alone (`sorted_distinct`); totality and transitivity are the host's `compare`'s and are not used.",
+      "phase": "fuaran-core#646",
+      "class": "premise",
+      "evidence": {
+        "assumption": "no key is below itself under the host's comparison"
+      }
+    },
+    {
+      "id": "proof-leg",
+      "level": "policy",
+      "statement": "Which prover is pinned (the kit's custard leg, F* v2026.10.11 with Z3 4.13.3, through the pinned kit asset), how many cold-cache runs a check is (one in the default gate, three with -ProofRuns 3), and that a model edited without re-extracting fails the leg: the reproducibility posture the proved rows are only as good as. Each module's cold-run budget is declared in proofs/modules.json and measured on every run.",
+      "boundary": "Policy, not algebra: no theorem addresses it, and a wall-clock budget is a claim at none of this ladder's four levels.",
+      "phase": "fuaran-core#646",
+      "evidence": {
+        "document": "proofs/README.md",
+        "budgets": "proofs/modules.json"
+      }
+    },
+    {
+      "id": "chain-messages-bounded",
+      "level": "proved",
+      "statement": "A computed chain ran at least one and at most `fuel` messages through `update`: the chain bound is what it says, counted in messages.",
+      "boundary": "Requires nothing. `update` is total in the model (a throw is the shipped runtime's refusal, rule 11). The stamp and the seeds `update` reads are inputs the theorem does not depend on.",
+      "phase": "fuaran-core#647",
+      "evidence": {
+        "theorem": "chain_messages_bounded",
+        "supporting": [
+          "chain_go_bounded"
+        ],
+        "model": "proofs/StepChain.fst",
+        "prover": "proofs/proofs-kit.json"
+      }
+    },
+    {
+      "id": "chain-fuel-monotone",
+      "level": "proved",
+      "statement": "A chain that fits under a bound is exactly the same chain — the same final model, the same effects in the same order, the same message count — under any larger bound: the bound only refuses chains that do not fit, it never changes what a chain computes.",
+      "boundary": "Requires the chain to be computed under the smaller bound.",
+      "phase": "fuaran-core#647",
+      "evidence": {
+        "theorem": "chain_fuel_monotone",
+        "supporting": [
+          "chain_go_monotone"
+        ],
+        "model": "proofs/StepChain.fst",
+        "prover": "proofs/proofs-kit.json"
+      }
+    },
+    {
+      "id": "chain-whole",
+      "level": "proved",
+      "statement": "A computed chain's effects are the first message's effects followed by those of every follow-up it ran, first-in first-out, as one list: nothing is dropped, reordered or added along the chain. This is the list the step machine installs and hands over whole, or not at all.",
+      "boundary": "Requires a positive bound. Which seed each follow-up reads is not modelled (the stamp laws test it).",
+      "phase": "fuaran-core#647",
+      "evidence": {
+        "theorem": "chain_whole",
+        "supporting": [
+          "chain_go_effects",
+          "effects_run"
+        ],
+        "model": "proofs/StepChain.fst",
+        "prover": "proofs/proofs-kit.json"
+      }
+    },
+    {
+      "id": "machine-exactly-once-in-order",
+      "level": "proved",
+      "statement": "After a drain that finishes without terminating, every accepted envelope reached `update` exactly once, in acceptance order: the list of accepted envelopes and the list of envelopes whose chain was computed are the same list. While a drain is in flight or yielded, accepted = updated ++ queue (`order_inv`); after termination, updated is a prefix of accepted (`in_order_always`). The abstraction is the queue as its list of envelopes, oldest first.",
+      "boundary": "Requires `order_inv` at the start, which the initial state satisfies and every operation preserves (`machine-invariants-from-initial`). The queue is the kernel's drain buffer or ring seen through its unread list (`drain-fifo`, `ring-bounded-fifo`). Envelopes a performer accepts synchronously inside a step are not modelled: they join the queue as any acceptance does.",
+      "phase": "fuaran-core#647",
+      "evidence": {
+        "theorem": "exactly_once_in_order",
+        "supporting": [
+          "drain_steps_preserves_order",
+          "drain_steps_finished",
+          "process_preserves_order",
+          "process_updated",
+          "accept_preserves_order",
+          "in_order_always"
+        ],
+        "model": "proofs/StepMachine.fst",
+        "prover": "proofs/proofs-kit.json"
+      }
+    },
+    {
+      "id": "machine-step-whole-or-nothing",
+      "level": "proved",
+      "statement": "A step installs the chain's final model and hands over exactly the chain's effects, in emission order, when the decision is allow; when the chain is over its fuel, or the decision parks or denies, the model, the handed list and the running instances are exactly as they were. Nothing is ever half applied.",
+      "boundary": "Stated of one step on any state. The decision is a function of the proposal alone (decision-is-a-function). `Resources` throwing and the identity skip are the shipped runtime's, tested.",
+      "phase": "fuaran-core#647",
+      "evidence": {
+        "theorem": "step_whole_or_nothing",
+        "model": "proofs/StepMachine.fst",
+        "prover": "proofs/proofs-kit.json"
+      }
+    },
+    {
+      "id": "machine-revoked-instance-refused",
+      "level": "proved",
+      "statement": "An envelope from an instance whose liveness token is not live is refused at acceptance and changes nothing; a committed step whose plan stops a key revokes every token that key ran under, and no start of that step or any later one re-issues it, because every token is below the next to issue (`tok_inv`) and starts issue from the next upwards.",
+      "boundary": "Requires `tok_inv`, which the initial state satisfies and every operation preserves. A stop's disposal and a start that throws (held) are the shipped runtime's.",
+      "phase": "fuaran-core#647",
+      "evidence": {
+        "theorem": "revoked_instance_refused",
+        "supporting": [
+          "revoked_not_accepted",
+          "commit_revokes",
+          "stop_keys_revoke",
+          "process_tok_inv",
+          "tok_inv_stop_keys",
+          "tok_inv_start_wants"
+        ],
+        "model": "proofs/StepMachine.fst",
+        "prover": "proofs/proofs-kit.json"
+      }
+    },
+    {
+      "id": "machine-effects-handed-once-in-order",
+      "level": "proved",
+      "statement": "Through any drain, the effects handed over before are a prefix of those handed over after: nothing handed is retracted or reordered; and a committed step appends exactly its chain's effects, once, in emission order (`machine-step-whole-or-nothing`).",
+      "boundary": "What a performer does with an effect is outside the model (performer-is-the-hosts).",
+      "phase": "fuaran-core#647",
+      "evidence": {
+        "theorem": "effects_handed_once_in_order",
+        "supporting": [
+          "drain_steps_handed_prefix",
+          "process_handed_prefix",
+          "prefix_trans"
+        ],
+        "model": "proofs/StepMachine.fst",
+        "prover": "proofs/proofs-kit.json"
+      }
+    },
+    {
+      "id": "machine-one-render-per-drain",
+      "level": "proved",
+      "statement": "Processing steps renders nothing; a drain that does not end terminated renders exactly once, at its end, whether it finished or yielded at its fuel; a drain that ends terminated renders nothing.",
+      "boundary": "The boot drain is the shipped runtime's: it paints the Init model first and renders again only if a step moved the model (tested, rule 15). A render that dispatches opens a new drain, which renders once more (tested, rule 13).",
+      "phase": "fuaran-core#647",
+      "evidence": {
+        "theorem": "one_render_per_drain",
+        "supporting": [
+          "drain_steps_renders"
+        ],
+        "model": "proofs/StepMachine.fst",
+        "prover": "proofs/proofs-kit.json"
+      }
+    },
+    {
+      "id": "machine-yield-drops-nothing",
+      "level": "proved",
+      "statement": "The drain's loop over `fuel1 + fuel2` steps is the loop over `fuel1` and, if that yielded, the loop over `fuel2` from the state it left: the same final state and the same verdict. The state between the two IS the backlog the yield carries, and `order_inv` says it holds exactly the accepted envelopes not yet processed, in order.",
+      "boundary": "Unconditional on the state. That the host runs the scheduled continuation is the host's (tested, rule 14).",
+      "phase": "fuaran-core#647",
+      "evidence": {
+        "theorem": "yield_drops_nothing",
+        "model": "proofs/StepMachine.fst",
+        "prover": "proofs/proofs-kit.json"
+      }
+    },
+    {
+      "id": "machine-terminated-absorbing",
+      "level": "proved",
+      "statement": "After termination every offer is refused and changes nothing, the drain processes nothing and renders nothing, nothing is handed over or started, and terminating again changes nothing; termination itself revokes every token, stops every instance, discards the queue, resolves every parked step as refused, and leaves the model, the handed list, the accepted and updated lists and the render count as they were.",
+      "boundary": "Requires `term_inv` for `terminate_then_nothing`, which the initial state satisfies and every operation preserves. The order of the shipped teardown's calls, and a stop's own guard, are tested (rule 24).",
+      "phase": "fuaran-core#647",
+      "evidence": {
+        "theorem": "terminated_absorbing",
+        "supporting": [
+          "terminate_spec",
+          "terminate_then_nothing",
+          "terminate_preserves_order",
+          "terminate_term_inv"
+        ],
+        "model": "proofs/StepMachine.fst",
+        "prover": "proofs/proofs-kit.json"
+      }
+    },
+    {
+      "id": "machine-full-queue-refuses",
+      "level": "proved",
+      "statement": "On a bounded host an envelope offered to a queue holding `capacity` envelopes is refused and changes nothing; on a growing host no envelope is refused for room.",
+      "boundary": "Requires a running machine and a live source. The producer being told is the shipped runtime's return value (tested, rule 3).",
+      "phase": "fuaran-core#647",
+      "evidence": {
+        "theorem": "full_queue_refuses",
+        "supporting": [
+          "accept_spec"
+        ],
+        "model": "proofs/StepMachine.fst",
+        "prover": "proofs/proofs-kit.json"
+      }
+    },
+    {
+      "id": "machine-invariants-from-initial",
+      "level": "proved",
+      "statement": "The initial state satisfies the order, token and termination invariants, and every dispatch (accept then drain), every drain and every termination preserves all three: so every theorem that assumes one holds of every state the machine reaches.",
+      "boundary": "Approval and rejection of a parked step, and the boot step, are the shipped runtime's (tested, rules 9 and 15).",
+      "phase": "fuaran-core#647",
+      "evidence": {
+        "theorem": "initial_inv",
+        "supporting": [
+          "dispatch_preserves_order",
+          "drain_preserves_order",
+          "dispatch_tok_inv",
+          "drain_steps_tok_inv",
+          "dispatch_term_inv",
+          "drain_steps_term_inv"
+        ],
+        "model": "proofs/StepMachine.fst",
+        "prover": "proofs/proofs-kit.json"
+      }
+    },
+    {
+      "id": "step-machine-agrees-with-runtime",
+      "level": "tested",
+      "statement": "The extracted step machine and the shipped Runtime, driven over generated envelope sequences — dispatches, events through live and revoked instance tokens, terminations — install the same model, hand over the same effects in the same order, refuse the same steps and acceptances, park the same steps, run the same keys and render the same number of times, after every operation: the only evidence that the proved model is about the code that ships.",
+      "boundary": "Agreement over the inputs drawn (40 seeds of 60 operations on .NET and under Fable), never over all inputs; effects are performed as signals so only resource starts issue tokens, and the drain fuel is high so no drain yields.",
+      "phase": "fuaran-core#647",
+      "evidence": {
+        "family": "Proofs.Oracle",
+        "cases": [
+          "Proofs.Oracle step machine: the extracted model and Runtime answer alike over generated envelope sequences",
+          "Proofs.Oracle step machine: a revoked instance is refused on both sides (go-red control: a live one is not)",
+          "Proofs.Oracle step machine: a chain over its fuel is refused whole on both sides"
+        ],
+        "model": "proofs/StepMachine.fst"
+      }
+    },
+    {
+      "id": "runtime-rules-on-both-hosts",
+      "level": "tested",
+      "statement": "The design's twenty-five numbered rules of the runtime semantics, each as a case over the shipped runtime with a probing interpreter: acceptance and authorship, the chain and its fuel, the decision as a unit, commit, park, refuse and a throw in update, the drain with its hook, its one render and its yield, the boot, the resource plan with its tokens, holds and level-triggering, and termination, and one case per public helper the other families do not reach. Pass on .NET and under Fable, from one list run on both hosts.",
+      "boundary": "Tests over chosen inputs; the proved rows are the general statements, and the rules they do not reach (the boot, the identity skip, Resources throwing, a held start, DrainEnded, approval and rejection) are tested here only.",
+      "phase": "fuaran-core#647",
+      "evidence": {
+        "family": "Suite:RuntimeLaws.cases",
+        "cases": [
+          "surface: Step.map, mapAll and followUps project a step list",
+          "surface: Interpreter.create's hooks do nothing, and tryKind finds a kind by id",
+          "surface: Handled.mapMsg and Started.mapMsg lift a child's performers into the parent's message type",
+          "surface: ResourceKey.named and prefix build paths; Principal.actorId is injective with a prefix per case",
+          "surface: Law.replayReproduces answers nothing for a faithful log and one sentence for a wrong model",
+          "rule 1-2: a reply is authored from its kind's Answers, never by the performer",
+          "rule 3: an envelope is refused when terminated, from a revoked instance, or by a full bounded queue - and the producer is told",
+          "rule 4: a chain is first-in first-out: a message, then its follow-ups, each follow-up's own behind them",
+          "rule 5: a chain over its fuel is refused whole and reported; a follow-up loop cannot freeze the host",
+          "rule 6: computing a chain performs and installs nothing: a preview leaves the runtime as it was",
+          "rule 7: the step is decided as a unit: the proposal holds every effect of the chain and the whole plan",
+          "rule 8: allow commits: the model, then every stop, then every start, then each effect once in emission order",
+          "rule 9: needs approval parks: the model is untouched and the step waits; approval commits it on its own stamp",
+          "rule 9: a rejected parked step is refused and the model untouched",
+          "rule 10: deny refuses: the model is untouched, and Refused may give the component a message authored by the host",
+          "rule 11: a throw in update refuses the step, reports it and records it with a marker",
+          "rule 2 and 3: an effect of an unregistered kind refuses the step, because its reply could not be authored",
+          "rule 8: a performer that throws is reported and the component may be told; the step stays committed",
+          "rule 12: a drain processes until the queue is empty; DrainEnded runs then and may accept more, which join the drain",
+          "rule 13: render once at the end of a drain; a render that dispatches opens a new drain",
+          "rule 14: a drain has fuel in steps; at the bound it renders and continues, dropping nothing and keeping order",
+          "rule 15: boot paints the Init model, then performs Init's steps authored by the host, then starts the resources",
+          "rule 16-17: the plan is start, stop, keep or restart per key; every stop precedes every start, in key order",
+          "rule 18: a start is issued its token before it is called, so a message it emits at once is accepted; a stop revokes before disposing",
+          "rule 19: a start that throws is held, reported through Lost, and not tried again until its description changes",
+          "rule 20: if Resources throws nothing changes and it is tried again at the next step; a throw is never read as an empty map",
+          "rule 21: resources are level-triggered: a key present only in the middle of a chain is never started",
+          "rule 22: the diff is skipped when the model is the same instance as at the last diff",
+          "rule 23: a termination requested during a step takes effect when the step ends",
+          "rule 24: teardown stops every resource, cancels every parked step, refuses what was in flight, and hands the final model to the host",
+          "rule 25: after termination nothing is accepted, performed, started or rendered"
+        ]
+      }
+    },
+    {
+      "id": "prototype-laws-on-both-hosts",
+      "level": "tested",
+      "statement": "The design prototype's 102 checks — the four ports, the streaming effect against a resource, and the stamp as an argument to update — restated against the real types and run through the harness; 11 held with no loop (the pure ones), 91 needed the step machine. Pass on .NET and under Fable.",
+      "boundary": "Where the design moved since the prototype (a reply is always its own step; a one-shot effect cannot stream; a throw in update refuses the step), the case says what it now asserts.",
+      "phase": "fuaran-core#647",
+      "evidence": {
+        "family": "Suite:PortLaws.cases",
+        "cases": [
+          "port-a 1: init model",
+          "port-a 2: init renders once",
+          "port-a 3: model after +,+,-",
+          "port-a 4: no effects performed",
+          "port-a 5: one render per drain (1 + 3)",
+          "port-a 6: clicked increment from the view value",
+          "port-a 7: replay reproduces the model",
+          "port-b 1: init: three loads, as values",
+          "port-b 2: init: route listener is a resource, started once",
+          "port-b 3: init: section from the address, read without a router",
+          "port-b 4: deep link resolved against the list; reload is four values",
+          "port-b 5: selected the addressed portfolio",
+          "port-b 6: view landed",
+          "port-b 7: one Error arm handles any reply's failure",
+          "port-b 8: ShowSection: route replace + tensions load (via Then LoadTensions)",
+          "port-b 9: Then is in the same drain: one render for ShowSection",
+          "port-b 10: the save is a comparable value (args included)",
+          "port-b 11: after save: notice + Then LoadTensions",
+          "port-b 12: ...which performed GetTensions",
+          "port-b 13: create then relist",
+          "port-b 14: created notice",
+          "port-b 15: route change selected alpha via Then and reloaded",
+          "port-b 16: restart: old search stopped, new one started",
+          "port-b 17: the stale reply was dropped by its liveness token",
+          "port-b 18: the latest reply landed",
+          "port-b 19: and the search resource is delisted once answered",
+          "port-b 20: preview: the save needs approval for an agent",
+          "port-b 21: preview follows Then: ShowSection's chain includes LoadTensions",
+          "port-b 22: preview: a local URL write is allowed under the remote-write ceiling",
+          "port-b 23: synchronous-completing replies all land in the INIT drain",
+          "port-b 24: a domain refusal or transport error surfaces as Refusal",
+          "port-b 25: view loaded",
+          "port-c 1: three listeners running; notifications held back until a token",
+          "port-c 2: a navigation request arrives through a resource",
+          "port-c 3: token arrived: notifications stream listed and started",
+          "port-c 4: TokenAcquired's follow-up ran once (transition held in the model)",
+          "port-c 5: notification became a toast",
+          "port-c 6: token gone: the stream is stopped by the diff",
+          "port-c 7: ...and its subscription is gone",
+          "port-c 8: a module's up-call reached the shell with no global dispatcher",
+          "port-c 9: a child's effect, lifted; its reply routed back by the wrapping (one extra message)",
+          "port-c 10: a child's module-lifetime resource, prefixed",
+          "port-c 11: child resource emits a child message, routed by the wrapping",
+          "port-c 12: cross-module event fan-out became Then follow-ups",
+          "port-c 13: child effect, wrapped, compared with =",
+          "port-c 14: erased: boxed effect values still compare with =",
+          "port-c 15: erased: a wrong-typed box compiles and is simply unequal",
+          "port-c 16: erased: the interpreter still gets the module's real invocation",
+          "port-c 17: erased: an up-call intercepted through the registered projection",
+          "port-c 18: erased: child resource key prefixed by module id",
+          "port-c 19: erased: a mis-addressed message fails in update, which refuses the step",
+          "port-d 1: call 1 in flight as a resource",
+          "port-d 2: active clock running",
+          "port-d 3: two active seconds",
+          "port-d 4: emission applied",
+          "port-d 5: provider resource stopped once replied",
+          "port-d 6: paint wait is an effect, compared by value",
+          "port-d 7: after paint, the DOM tool is an effect",
+          "port-d 8: tool result fed back; call 2 in flight",
+          "port-d 9: call 2 carries the tool result in its request (as a value)",
+          "port-d 10: asking: the loop waits in a phase",
+          "port-d 11: asking: the active clock is stopped",
+          "port-d 12: preview sees the next provider call only as a resource change",
+          "port-d 13: answered: call 3 in flight",
+          "port-d 14: stopped",
+          "port-d 15: the provider call was stopped (an in-flight HTTP would be aborted)",
+          "port-d 16: late reply dropped by the liveness token",
+          "port-d 17: tokens accumulated from usage",
+          "port-d 18: resumed run carries prior context",
+          "port-d 19: broken emission with no tools is fed back, not Completed",
+          "port-d 20: completed; final assistant text appended to the session",
+          "port-d 21: token budget halts at the next loop entry",
+          "port-d 22: replay reproduces the model from the log",
+          "stream-vs-resource 1: a one-shot effect cannot keep delivering: its second answer is refused at acceptance",
+          "stream-vs-resource 2: a resource stops when delisted",
+          "stream-vs-resource 3: an answer that completes at once: one drain, one render",
+          "stream-vs-resource 4: an answer that arrives later: two drains, two renders",
+          "stamp 1: a test supplies the stamp: the note carries its time",
+          "stamp 2: the save carries the same note",
+          "stamp 3: the note is in the model after one message",
+          "stamp 4: its time is the time of acceptance",
+          "stamp 5: the host read the clock once, and update never did",
+          "stamp 6: the effect form needs two messages for the same note",
+          "stamp 7: update twice on the same stamp gives the same result",
+          "stamp 8: a preview reads no clock",
+          "stamp 9: the same envelope commits after the clock has moved",
+          "stamp 10: the committed note carries the time of acceptance, not of approval",
+          "stamp 11: a step approved after the model moved under it no longer matches, and is refused as stale",
+          "stamp 12: a replay reads no clock and reproduces the model, ids and times included",
+          "stamp 13: the same stamp and counter give the same id",
+          "stamp 14: a different counter gives a different id",
+          "stamp 15: a child's seed differs from its parent's and from its sibling's",
+          "stamp 16: Init takes no stamp: what it needs came in the flags",
+          "stamp 17: Init's follow-up is a message, stamped by the host at boot",
+          "stamp 18: a component that needs no stamp composes under one that does",
+          "stamp 19: a parent and a lifted child mint in one call, and the ids differ",
+          "stamp 20: the same parent mints a different id in the next step",
+          "stamp 21: three follow-ups to one child each mint an id, and the ids differ",
+          "stamp 22: every follow-up reads its step's time, though the clock moves on each read",
+          "stamp 23: a reply is a step of its own, stamped when it is accepted",
+          "stamp 24: without the split, a parent and its child mint the same id in one call",
+          "stamp 25: without a seed per follow-up, three follow-ups to one child mint one id"
+        ]
+      }
+    },
+    {
+      "id": "update-is-total",
+      "level": "assumed",
+      "class": "premise",
+      "statement": "The models take `update` as a total function. The shipped runtime catches a throw and refuses the step (rule 11); the model states that step's outcome as a refusal and does not model the throw.",
+      "boundary": "That `update` is pure is not expressible as a theorem; the determinism law tests it over drawn inputs.",
+      "phase": "fuaran-core#647",
+      "evidence": {
+        "assumption": "update returns for every stamp, message and model, and the same result for the same inputs"
+      }
+    },
+    {
+      "id": "gate-permitted-or-granted",
+      "level": "proved",
+      "statement": "When the gate permits a step, the domain's policy permitted it (or required an approval that the grant presented met), the grant verdict permitted it, and EVERY invocation of the step was permitted by the author's registry outright, or required an approval and a grant for exactly this request was presented. With no grant presented the registry's verdict is the raw one, and a refusal is never lifted by anything: so every performed effect was allowed by the author's registry or carries a valid grant for exactly that request, and nothing else lifts a needs-approval.",
+      "boundary": "Under the premise core-join-is-max. The request identity is the list of invocations: that Proposal.request renders it injectively is Core's encoding (grant-identity-injective). The approver is not modelled: that the author cannot approve is Core's refusal, tested (gate-laws-on-both-hosts).",
+      "phase": "fuaran-core#648",
+      "evidence": {
+        "theorem": "permit_means_each_permitted_or_granted",
+        "supporting": [
+          "no_grant_no_lift",
+          "refuse_never_lifted",
+          "step_gates_rises",
+          "step_gates_covers"
+        ],
+        "model": "proofs/Authority.fst",
+        "prover": "proofs/proofs-kit.json"
+      }
+    },
+    {
+      "id": "gate-restricted-never-looser",
+      "level": "proved",
+      "statement": "A restricted principal's registry — the host's tightened by restrictions, each Core's restrict or withGate — decides every invocation, and every whole step, at a rank at least the host's, whatever the context and whatever grant is presented: no configuration can give an agent or a foreign source more than the host allows.",
+      "boundary": "Under the premise core-join-is-max (Core's with_gate_tightens_in_context is its registry-level form). Stated against the host's registry (no restrictions); the host's own gates are one abstract function on both sides.",
+      "phase": "fuaran-core#648",
+      "evidence": {
+        "theorem": "restricted_step_never_looser",
+        "supporting": [
+          "restricted_never_looser",
+          "raw_restricted_rises",
+          "gates_rises",
+          "step_gates_restricted"
+        ],
+        "model": "proofs/Authority.fst",
+        "prover": "proofs/proofs-kit.json"
+      }
+    },
+    {
+      "id": "gate-unregistered-refused",
+      "level": "proved",
+      "statement": "A step whose request names a kind the registry does not hold is refused whole, whatever the policy, the grant and its other invocations say.",
+      "boundary": "Under the premise core-join-is-max. The shipped runtime also refuses such a step before the gate (D26.9), for the reply's authorship; the model states the gate's refusal.",
+      "phase": "fuaran-core#648",
+      "evidence": {
+        "theorem": "unregistered_refused",
+        "model": "proofs/Authority.fst",
+        "prover": "proofs/proofs-kit.json"
+      }
+    },
+    {
+      "id": "gate-two-ceilings",
+      "level": "proved",
+      "statement": "A step decided under two ceilings — the author's registry joined with another principal's — is decided at a rank at least either's: an effect a hosted program lowers to is never decided more loosely than its author's ceiling allows, whoever triggers it.",
+      "boundary": "Under the premise core-join-is-max. Gate.decideUnder realises it; this runtime hosts no program yet, so the bridge that will is the caller.",
+      "phase": "fuaran-core#648",
+      "evidence": {
+        "theorem": "two_ceilings_never_looser",
+        "supporting": [
+          "join_upper"
+        ],
+        "model": "proofs/Authority.fst",
+        "prover": "proofs/proofs-kit.json"
+      }
+    },
+    {
+      "id": "gate-grant-covers-one-step",
+      "level": "proved",
+      "statement": "A presentation that commits presented a grant naming this parked step and the request the step makes NOW, and the step's verdict with the grant presented was a permit; a grant whose request is not the step's present request is refused as stale; a grant expired by the host's clock, or minted under another registry generation, refuses the step whatever else is true of it.",
+      "boundary": "The grant's single use and the runtime's lookup of the parked step are the shipped Approve's, tested; that termination leaves no parked step is StepMachine's terminate_spec.",
+      "phase": "fuaran-core#648",
+      "evidence": {
+        "theorem": "present_commits_only_its_step",
+        "supporting": [
+          "stale_refused",
+          "expired_or_old_generation_refused"
+        ],
+        "model": "proofs/Authority.fst",
+        "prover": "proofs/proofs-kit.json"
+      }
+    },
+    {
+      "id": "core-join-is-max",
+      "level": "assumed",
+      "class": "premise",
+      "statement": "Core's PolicyDecision.join is the argument of the larger rank, the left on a tie (Allow < NeedsApproval < Deny), from which it is monotone in both arguments and an upper bound of both. The gate's model takes the join as a parameter under exactly this premise (is_join) and re-proves nothing of it: Core discharges it as join_is_max, policy_join_monotone_in_context and with_gate_tightens_in_context in Fuaran-Core/proofs/Capability.fst at v0.43.0. The differential hands the extraction Core's join itself.",
+      "boundary": "Core's theorems are about Core's definition; the premise here is that definition, read at the pinned version.",
+      "phase": "fuaran-core#648",
+      "evidence": {
+        "assumption": "join is Core's PolicyDecision.join: the larger rank wins, the left on a tie"
+      }
+    },
+    {
+      "id": "grant-identity-injective",
+      "level": "assumed",
+      "class": "premise",
+      "statement": "Proposal.request renders a step's effect invocations, starts and stops through Core's canonical field encoding (Hash.canonicalFields), which Core proves injective (invocation_identity_injective, Core's D249); so two steps have one request exactly when they ask the same kinds the same arguments at the same destinations and plan the same starts and stops, and the model's request — the list of invocations — is the shipped identity. No hash is taken.",
+      "boundary": "Core's theorem is about the encoding of field lists; that each invocation contributes a fixed number of fields per tag is the shipped renderer's construction, tested by the differential's stale grants.",
+      "phase": "fuaran-core#648",
+      "evidence": {
+        "assumption": "Core's canonical field encoding is injective over field lists"
+      }
+    },
+    {
+      "id": "gate-agrees-with-model",
+      "level": "tested",
+      "statement": "The extracted gate model and the shipped Gate, handed Core's own join, answer alike over generated principals (the host, a user, an agent and a foreign source with restrictions drawn), steps of registered and unregistered kinds, grants for exactly the request (valid, expired, from another generation) and a second ceiling; and the extracted model and the shipped Runtime over the gate agree on what every dispatch commits, parks or refuses and on every grant presented — as minted, expired, forged for another request (stale) or for another parked step. The only evidence that the proved model is about the code that ships.",
+      "boundary": "Agreement over the inputs drawn (40 seeds on .NET and under Fable), never over all inputs; resources are not drawn, so the plan's starts and stops enter the request identity by construction (Proposal.request) and are not exercised here; the approver is never the author.",
+      "phase": "fuaran-core#648",
+      "evidence": {
+        "family": "Proofs.Oracle",
+        "cases": [
+          "Proofs.Oracle authority: the extracted gate model and Gate.decide answer alike over generated principals, registries, steps and grants",
+          "Proofs.Oracle authority: the extracted model and Runtime agree on what a dispatch commits, parks or refuses, and on every grant presented",
+          "Proofs.Oracle authority: an unregistered kind is refused on both sides (go-red control: a registered one is not)"
+        ],
+        "model": "proofs/Authority.fst"
+      }
+    },
+    {
+      "id": "gate-laws-on-both-hosts",
+      "level": "tested",
+      "statement": "The gate's laws over the shipped runtime and gate: a reply to a model call is the agent's and its step is decided under the agent's registry though a user asked; an agent's and a foreign source's decisions are never looser than the host's; a step with one refused effect performs nothing; a parked step commits with its grant, resolves without committing under a grant for another step, and is refused as stale when the model moved; no dispatched step carries a grant and a parked step waits for one; the author cannot approve and another user can; a kind's classes are the registered ones; the mount check names the kinds the host does not cover; an unregistered kind is denied; an expired grant and one from an earlier generation are refused; the principal-to-actor mapping is injective; the decision under two ceilings is never looser than either. Pass on .NET and under Fable, from one list run on both hosts.",
+      "boundary": "Tests over chosen inputs; the proved rows are the general statements. Core's registry and guarded approval run under Fable 5 from the packages' own sources.",
+      "phase": "fuaran-core#648",
+      "evidence": {
+        "family": "Suite:GateLaws.cases",
+        "cases": [
+          "t1: a reply to a model call is the agent's, and the step it causes is decided under the agent's registry though a user asked",
+          "t1: an agent's registry never allows what the host's denies (every generated step, by rank)",
+          "t1: a step with one refused effect performs nothing",
+          "t1: a parked step commits with a matching grant, is refused with a grant for another step, and is refused as stale when the model moved",
+          "t1: no message can approve: every dispatched step is decided without a grant, and a parked step waits for one",
+          "t1: the author of a step cannot approve it; another user can",
+          "t3: a kind's classes are fixed at registration and read from there, never from the call",
+          "t4: the mount check refuses an interpreter whose kinds the host does not cover, naming them",
+          "t4: an unregistered kind is refused before anything is performed",
+          "t5: a grant expired by the host's clock is refused, and so is one minted under an earlier generation",
+          "t2: the principal-to-actor mapping is injective, with a prefix per case",
+          "t6: a step decided under two ceilings is never looser than under either (the program author's and the message's)"
+        ]
+      }
+    },
+    {
+      "id": "decision-is-a-function",
+      "level": "assumed",
+      "class": "premise",
+      "statement": "The step machine's model takes the decision as a parameter: a total function of the proposal — its effects, its starts and its stops. Phase 648 realises that parameter: the gate's decision (Authority.step_verdict, shipped as Gate.decide) is a total function of the proposal, which now carries the author, the clock as data and the grant presented, so what a gate reads of the host (time, generation, an approval) arrives in the proposal and nothing is read beside it.",
+      "boundary": "A premise of StepMachine.fst's theorems, met by construction by Gate.decide and by Decide.allowAll; a host's own Decide must be a function too, which nothing can check.",
+      "phase": "fuaran-core#648",
+      "evidence": {
+        "assumption": "decide answers from the proposal and nothing else"
+      }
+    },
+    {
+      "id": "performer-is-the-hosts",
+      "level": "assumed",
+      "class": "premise",
+      "statement": "The step machine's model records each effect handed over and nothing of what the performer does with it, and models a reply as an envelope accepted through a one-shot token. That a performer does what its kind says, answers at most once and never answers into the step that emitted it is the host's.",
+      "boundary": "Not expressible as a theorem; the harness's scripted interpreter and the differential's signal performers discharge it in the tests.",
+      "phase": "fuaran-core#647",
+      "evidence": {
+        "assumption": "a performer behaves as its registered kind declares"
+      }
+    },
+    {
+      "id": "step-machine-boundary",
+      "level": "policy",
+      "statement": "What the step machine's model does not cover and the rule tests do: the boot (paint, then Init's steps as the host's step, then the drain), the identity skip, Resources throwing, a start that throws (held and reported through Lost), the interpreter's DrainEnded hook, envelopes accepted synchronously inside a step, the rejection of a parked step, the approval's lookup of the parked step by the grant and its single use (the decision an approval is held to, the stale check and the grant's expiry and generation are the gate's model's, gate-grant-covers-one-step), and the stamp and the seed function. Each is named here so its absence from the proved rows is read as a boundary, not a claim that failed.",
+      "boundary": "A boundary statement.",
+      "phase": "fuaran-core#647",
+      "evidence": {
+        "document": "proofs/README.md"
+      }
+    },
+    {
+      "id": "session-laws-on-both-hosts",
+      "level": "tested",
+      "statement": "The session log's laws over the shipped runtime and session package: a replay under an interpreter that fails if asked to perform, and with no clock to read, reproduces the model with its ids and its times; a withheld value is absent from the log's bytes, its bare digest too, and two equal withheld values commit differently; a value declared secret is absent from the bytes and from the vault, and its step is recorded as lost; a runtime with no sink attached writes nothing, and Fuaran.MVU references no session code (.NET); every decision and every grant is recorded and replayed without deciding; the log verifies, is attributed and detects tampering through Core's own functions, and compacts and replays from a snapshot through them; a restore sends an idempotent effect again with the same value, answers the rest as interrupted, starts the resources again, cancels a parked step and continues the chain; the disclosure function is handed every field; the commitment's HMAC meets RFC 4231 and, on .NET, the platform's. Pass on .NET and under Fable, from one list run on both hosts; the reference direction, the platform's HMAC and the file store are .NET's.",
+      "boundary": "Tests over chosen inputs and one component. Core's op-stream runs under Fable 5 from the package's own sources, in the memory store. That a replay reproduces the model rests on update being a function of its stamp, its message and its model (update-is-total).",
+      "phase": "fuaran-core#649",
+      "evidence": {
+        "family": "Suite:SessionLaws.cases",
+        "cases": [
+          "t1: a replay under an interpreter that fails if asked to perform, and no clock, reproduces the model, its ids and its times",
+          "t1: a withheld value is not in the log's bytes, and two equal withheld values do not record equally",
+          "t1: a value declared secret appears nowhere: not in the bytes, not in the vault, and the step is recorded as lost",
+          "t1: a runtime with no sink attached writes nothing",
+          "t1: Fuaran.MVU references no session code: a host without a sink takes none",
+          "t2: every decision and every grant is recorded, and a replay replays them without deciding",
+          "t3: the log is a Core op-stream: verified by Core, each record attributed by the principal's mapping, tampering detected",
+          "t3: snapshots and compaction are Core's: a compacted log replays from its snapshot to the same model",
+          "t4: restore sends an idempotent effect again under the same key, answers the rest as interrupted, lists the resources again, and continues the log",
+          "t4: a step left parked when the session stopped is cancelled on restore, and the component is told",
+          "t5: a withheld field replays through the host's vault, and only to the value its commitment opens to",
+          "t5: the disclosure function is handed every field: the message's, an answer's kind, a resource key, a reason and a grant's request",
+          "t5: the commitment's HMAC-SHA-256 meets RFC 4231, and a short key is refused"
+        ]
+      }
+    },
+    {
+      "id": "session-chain-inherited",
+      "level": "assumed",
+      "class": "premise",
+      "statement": "The session log's integrity and attribution are Core's op-stream, used and not re-proved: a record's hash folds its sequence, its actor (the author's Principal.toActor mapping) and its op, so an edited, reordered or re-attributed record fails Core's verifyChain, and a compaction verified first keeps verifying (Fuaran-Core/proofs/Chain.fst at v0.43.0: intact_verifies, tamper_detected, tamper_actor_detected, compact_preserves_verify). The package chains each record with Core's chainHashOf and verifies, reads, snapshots and compacts with Core's functions.",
+      "boundary": "Core's theorems are about Core's chain; that the session hands Core every record it writes is the package's construction, tested. A chain a client holds and can recompute is not evidence against that client: tamper-evidence of a client-held log is not claimed, and an attestable log needs a head anchored through Core's attestation sink (DECISIONS.md D28.8).",
+      "phase": "fuaran-core#649",
+      "evidence": {
+        "assumption": "Core's op-stream verifies a record's sequence, actor and op through its hash chain, as proved at the pinned version"
+      }
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Fuaran.MVU: the runtime. A component (Component.fs: Init, Update with its stamp, Resources, View; lifting
+    a child with a seed split; the legacy effect compared by site), the step type with its follow-ups
+    (Step.fs), the stamp and the seed function (Stamp.fs), envelopes with their authors and sources
+    (Envelope.fs), kinds and the interpreter (Interpreter.fs), the decision seam with its allow-all default
+    (Decision.fs), the chain computed whole (Chain.fs) and the step machine over the kernel's queue and diff
+    (Runtime.fs), Phase 647; the gate over Core's registry (Gate.fs: a principal's registry, the step decided through
+    Core's guarded submission and approval, and the grant), Phase 648. References the kernel by project, FSharp.Core,
+    and the published Fuaran.Core.Function and Fuaran.Core.AiSurface packages.
+-->
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <IsPackable>true</IsPackable>
+    <PackageId>Fuaran.MVU</PackageId>
+    <Description>Fuaran.MVU: a model-update-view runtime whose components are pure, whose effects are values, and whose message loop decides each step whole before it installs anything. The step machine and its gate are held to F* models by a differential test on .NET and under Fable. Depends on Fuaran.MVU.Kernel, FSharp.Core and the published Fuaran.Core.Function and Fuaran.Core.AiSurface packages.</Description>
+    <PackageTags>fsharp;fable;mvu;elm;verified;runtime</PackageTags>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Step.fs" />
+    <Compile Include="Stamp.fs" />
+    <Compile Include="Envelope.fs" />
+    <Compile Include="Component.fs" />
+    <Compile Include="Interpreter.fs" />
+    <Compile Include="Decision.fs" />
+    <Compile Include="Chain.fs" />
+    <Compile Include="Runtime.fs" />
+    <Compile Include="Gate.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Fuaran.MVU.Kernel/Fuaran.MVU.Kernel.fsproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="FSharp.Core" />
+    <!-- The gate (Gate.fs, Phase 648): Core's registry, policy gate and grant, and its guarded submission and
+         approval. Public packages, pinned once in Directory.Packages.props. -->
+    <PackageReference Include="Fuaran.Core.Function" />
+    <PackageReference Include="Fuaran.Core.AiSurface" />
+  </ItemGroup>
+</Project>

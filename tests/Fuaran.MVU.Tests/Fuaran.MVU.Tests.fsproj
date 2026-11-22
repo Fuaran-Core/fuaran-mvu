@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The test host on .NET: the kernel's laws over the shipped code, the runtime's laws (the prototype's
+    checks ported, and the design's numbered rules), the differential against the extracted models (the oracle
+    the proof leg builds from proofs/oracle/Custard.fsproj), the cross-host fingerprint of the models, and the
+    claims ladder held to the tree, and the session log's laws (Phase 649). Expecto; `dotnet run` with the arguments `filter Proofs.Oracle` (Expecto's filter switch) is
+    how the proof leg's host step selects the differential.
+-->
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- Shared/: host-neutral, the Node runner compiles these too (a subdirectory, so Fable writes their output under its output directory rather than beside the Node project). -->
+    <Compile Include="Shared/Check.fs" />
+    <Compile Include="Shared/Rand.fs" />
+    <Compile Include="Shared/Laws.fs" />
+    <Compile Include="Shared/Samples.fs" />
+    <Compile Include="Shared/PortLaws.fs" />
+    <!-- The models' cross-host fingerprint lives in the Fable oracle directory so that project can compile
+         it under the kit's independence guard; this host runs it on .NET, as a differential case. -->
+    <Compile Include="Fable/OracleFingerprint.fs" />
+    <Compile Include="Shared/Differential.fs" />
+    <Compile Include="Shared/StepDifferential.fs" />
+    <Compile Include="Shared/GateDifferential.fs" />
+    <Compile Include="Shared/RuntimeLaws.fs" />
+    <Compile Include="Shared/GateLaws.fs" />
+    <Compile Include="Shared/SessionLaws.fs" />
+    <Compile Include="Ladder.fs" />
+    <Compile Include="Program.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../src/Fuaran.MVU.Kernel/Fuaran.MVU.Kernel.fsproj" />
+    <ProjectReference Include="../../src/Fuaran.MVU/Fuaran.MVU.fsproj" />
+    <ProjectReference Include="../../src/Fuaran.MVU.Session/Fuaran.MVU.Session.fsproj" />
+    <ProjectReference Include="../../src/Fuaran.MVU.Testing/Fuaran.MVU.Testing.fsproj" />
+    <ProjectReference Include="../../proofs/oracle/Custard.fsproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Expecto" />
+  </ItemGroup>
+</Project>

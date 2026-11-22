@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Fuaran.MVU.Browser: the browser's host package, Phase 719 (DECISIONS.md D30). Kinds.fs (the standard vocabulary:
+    the client effects of Fuaran.ClientEffects carried whole, storage and the timers, each kind registered once with its
+    classes, and the invocation each effect is decided as), Performers.fs (the DOM as a value, a performer per kind,
+    the interpreter's line, and the vocabulary embedded as one case of an application's effect type), Host.fs (the
+    browser host on the kernel's growing queue, and the live binding to the DOM as inline functions, the only code here
+    that runs under Fable alone). References Fuaran.MVU by project, FSharp.Core, Fuaran.ClientEffects and Fable.Core.
+-->
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <IsPackable>true</IsPackable>
+    <PackageId>Fuaran.MVU.Browser</PackageId>
+    <Description>Fuaran.MVU.Browser: the standard client kinds for Fuaran.MVU in the browser. The client effects of Fuaran.ClientEffects (clipboard, navigation, history, focus, download, file read, print, confirm) with storage and the timers, each kind registered once with its classes so the gate decides it; a performer per kind, each a one-shot answer or none; the vocabulary embedded as one case of an application's effect type; and the browser host on the kernel's growing queue. Depends on Fuaran.MVU, FSharp.Core, Fuaran.ClientEffects and Fable.Core.</Description>
+    <PackageTags>fsharp;fable;mvu;browser;client-effects</PackageTags>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Kinds.fs" />
+    <Compile Include="Performers.fs" />
+    <Compile Include="Host.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Fuaran.MVU/Fuaran.MVU.fsproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="FSharp.Core" />
+    <!-- The client effect vocabulary, declared once in its own library; this package declares none of its arms again.
+         Fable.Core for the live binding's emitted DOM calls. Pinned once in Directory.Packages.props. -->
+    <PackageReference Include="Fuaran.ClientEffects" />
+    <PackageReference Include="Fable.Core" />
+  </ItemGroup>
+</Project>

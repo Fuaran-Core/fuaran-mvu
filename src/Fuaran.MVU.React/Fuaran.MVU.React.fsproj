@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Fuaran.MVU.React: the React adapter, Phase 720 (DECISIONS.md D29). ElementView.fs (the element-view bridge and the
+    mark a governed surface demands, which an element view never carries), Store.fs (the slice of React the adapter
+    calls, the model store React subscribes to, its root component and the slice hook), Scheduler.fs (the browser's
+    timing, the drain's continuation and the after-the-next-paint kind with its performer), Hydration.fs (attaching
+    the root fresh or over server-rendered markup), HotReload.fs (the model carried across a reload; compiled only
+    under DEBUG, which Fable defines in watch mode and not in a production build), Mount.fs (the mount, and the live
+    binding to React and the browser as inline functions, so a module that never calls them imports nothing).
+    References Fuaran.MVU by project, FSharp.Core, Fable.Core and Fable.React.Types (React's types; not Feliz).
+-->
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <IsPackable>true</IsPackable>
+    <PackageId>Fuaran.MVU.React</PackageId>
+    <Description>Fuaran.MVU.React: mounts a Fuaran.MVU component in React. A model store React reads through useSyncExternalStore, one publish per drain, hydration over server-rendered markup with Init run once, hot reload that keeps the model where its shape allows and is compiled out of production builds, an element-view bridge for views that are React elements (which a governed surface refuses at compile time), and an after-the-next-paint effect kind with its performer. Depends on Fuaran.MVU, FSharp.Core, Fable.Core and Fable.React.Types; not on Feliz.</Description>
+    <PackageTags>fsharp;fable;mvu;react;hydration;hot-reload</PackageTags>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="ElementView.fs" />
+    <Compile Include="Store.fs" />
+    <Compile Include="Scheduler.fs" />
+    <Compile Include="Hydration.fs" />
+    <Compile Include="HotReload.fs" />
+    <Compile Include="Mount.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Fuaran.MVU/Fuaran.MVU.fsproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="FSharp.Core" />
+    <!-- React's F# types (ReactElement): the package Feliz itself is built on, so Feliz-built elements cross the
+         bridge as they are. Fable.Core for the imports and the browser's globals. Pinned once in
+         Directory.Packages.props. -->
+    <PackageReference Include="Fable.Core" />
+    <PackageReference Include="Fable.React.Types" />
+  </ItemGroup>
+</Project>

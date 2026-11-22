@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The Fable oracle the proof leg runs under Node (proofs/check.ps1, DECLARATION 3). FStarCustard.fs is
+       the stand-in the leg derives from the prover's support library and holds here byte for byte; the six
+       extractions are the committed ones; OracleFingerprint.fs is this repository's, compiled by the .NET host
+       too; Main.fs, LAST, is the runner. This directory compiles no production source: the leg's independence
+       guard refuses it, and the differential against the kernel lives in ../Node. Never packed. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="FStarCustard.fs" />
+    <Compile Include="../../../proofs/oracle/Drain.fs" />
+    <Compile Include="../../../proofs/oracle/FixedRing.fs" />
+    <Compile Include="../../../proofs/oracle/KeyedDiff.fs" />
+    <Compile Include="../../../proofs/oracle/StepChain.fs" />
+    <Compile Include="../../../proofs/oracle/StepMachine.fs" />
+    <Compile Include="../../../proofs/oracle/Authority.fs" />
+    <Compile Include="OracleFingerprint.fs" />
+    <Compile Include="Main.fs" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Fuaran.MVU.Kernel: the proved core of the Fuaran.MVU runtime. Phase 646 cut it with three parts, each held
+    to an F* model under proofs/ by a differential test on .NET and under Fable: the drain buffer (Drain.fs,
+    proofs/Drain.fst), the fixed-capacity ring (Ring.fs, proofs/FixedRing.fst) and the keyed resource diff
+    (Diff.fs, proofs/KeyedDiff.fst). It references FSharp.Core and nothing else: no host, no renderer, no
+    other library. Later phases add the step machine and the gate beside these.
+-->
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <IsPackable>true</IsPackable>
+    <PackageId>Fuaran.MVU.Kernel</PackageId>
+    <Description>Fuaran.MVU.Kernel: the proved core of the Fuaran.MVU model-update-view runtime. A drain buffer for single-threaded hosts, a fixed-capacity ring for hosts that must refuse, and a keyed resource diff, each held to an F* model by a differential test. FSharp.Core only.</Description>
+    <PackageTags>fsharp;fable;mvu;verified;runtime</PackageTags>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Drain.fs" />
+    <Compile Include="Ring.fs" />
+    <Compile Include="Diff.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="FSharp.Core" />
+  </ItemGroup>
+</Project>

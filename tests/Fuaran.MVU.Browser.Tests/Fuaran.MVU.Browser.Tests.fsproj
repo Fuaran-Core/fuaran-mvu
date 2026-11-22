@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The browser package's laws (Phase 719, DECISIONS.md D30.9): the standard effects as values under the scripted
+    interpreter of Fuaran.MVU.Testing, and against a stand-in for the DOM written here each performer, the gate's
+    refusals and the browser host. One file; the runner is its last lines. `pwsh ./run.ps1` runs it on .NET (its tests
+    stage) and transpiles it with the repository's `fable` tool and runs it under Node (its fable stage). No browser is
+    loaded: the package's live binding is inline, and nothing here calls it.
+-->
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- The check shape every law in this repository is written in, shared with the runtime's test hosts. -->
+    <Compile Include="../Fuaran.MVU.Tests/Shared/Check.fs" Link="Shared/Check.fs" />
+    <Compile Include="BrowserLaws.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../src/Fuaran.MVU.Browser/Fuaran.MVU.Browser.fsproj" />
+    <ProjectReference Include="../../src/Fuaran.MVU.Testing/Fuaran.MVU.Testing.fsproj" />
+  </ItemGroup>
+</Project>

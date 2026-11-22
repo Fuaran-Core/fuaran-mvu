@@ -1,0 +1,62 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The kernel and the runtime under Fable: this project compiles the kernel's and the runtime's sources,
+       the session log, the testing library, the committed extractions over the derived stand-in, and the host-neutral laws and
+       differential, and Main.fs runs them under Node. It is a
+       test HOST, so it may reach production — the proof leg's independence guard binds the oracle directories,
+       not this one. `pwsh ./run.ps1`'s fable stage transpiles it with the repository's `fable` tool and runs it.
+       Builds on .NET too, so the solution build type-checks it. Never packed. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../../src/Fuaran.MVU.Kernel/Drain.fs" />
+    <Compile Include="../../../src/Fuaran.MVU.Kernel/Ring.fs" />
+    <Compile Include="../../../src/Fuaran.MVU.Kernel/Diff.fs" />
+    <Compile Include="../../../src/Fuaran.MVU/Step.fs" />
+    <Compile Include="../../../src/Fuaran.MVU/Stamp.fs" />
+    <Compile Include="../../../src/Fuaran.MVU/Envelope.fs" />
+    <Compile Include="../../../src/Fuaran.MVU/Component.fs" />
+    <Compile Include="../../../src/Fuaran.MVU/Interpreter.fs" />
+    <Compile Include="../../../src/Fuaran.MVU/Decision.fs" />
+    <Compile Include="../../../src/Fuaran.MVU/Chain.fs" />
+    <Compile Include="../../../src/Fuaran.MVU/Runtime.fs" />
+    <Compile Include="../../../src/Fuaran.MVU/Gate.fs" />
+    <Compile Include="../../../src/Fuaran.MVU.Session/Commitment.fs" />
+    <Compile Include="../../../src/Fuaran.MVU.Session/Entry.fs" />
+    <Compile Include="../../../src/Fuaran.MVU.Session/Store.fs" />
+    <Compile Include="../../../src/Fuaran.MVU.Session/Session.fs" />
+    <Compile Include="../../../src/Fuaran.MVU.Testing/Harness.fs" />
+    <Compile Include="../../../src/Fuaran.MVU.Testing/Law.fs" />
+    <Compile Include="../Fable/FStarCustard.fs" />
+    <Compile Include="../../../proofs/oracle/Drain.fs" />
+    <Compile Include="../../../proofs/oracle/FixedRing.fs" />
+    <Compile Include="../../../proofs/oracle/KeyedDiff.fs" />
+    <Compile Include="../../../proofs/oracle/StepChain.fs" />
+    <Compile Include="../../../proofs/oracle/StepMachine.fs" />
+    <Compile Include="../../../proofs/oracle/Authority.fs" />
+    <Compile Include="../Shared/Check.fs" />
+    <Compile Include="../Shared/Rand.fs" />
+    <Compile Include="../Shared/Laws.fs" />
+    <Compile Include="../Shared/Samples.fs" />
+    <Compile Include="../Shared/PortLaws.fs" />
+    <Compile Include="../Fable/OracleFingerprint.fs" />
+    <Compile Include="../Shared/Differential.fs" />
+    <Compile Include="../Shared/StepDifferential.fs" />
+    <Compile Include="../Shared/GateDifferential.fs" />
+    <Compile Include="../Shared/RuntimeLaws.fs" />
+    <Compile Include="../Shared/GateLaws.fs" />
+    <Compile Include="../Shared/SessionLaws.fs" />
+    <Compile Include="Main.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- The runtime's gate (Gate.fs, Phase 648) reaches Core's registry and guarded surface; Fable compiles the
+         packages' sources from the fable/ folder each ships. Pinned once in Directory.Packages.props. -->
+    <PackageReference Include="Fuaran.Core.Function" />
+    <PackageReference Include="Fuaran.Core.AiSurface" />
+    <!-- The session log (Phase 649) is Core's op-stream, compiled under Fable from the package's fable/ sources;
+         in the memory store, which is the browser's default. -->
+    <PackageReference Include="Fuaran.Core.OpStream" />
+  </ItemGroup>
+</Project>

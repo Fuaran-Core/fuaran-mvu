@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Fuaran.MVU.Session: the optional session log, Phase 649 (DECISIONS.md D28). A sink the host attaches as the
+    runtime's `Record`; the log is a Core op-stream of the decided steps, each under the host's disclosure function,
+    with replay (performs nothing) and restore. Commitment.fs (the keyed commitment, HMAC-SHA-256 over Core's SHA-256),
+    Entry.fs (the record and its canonical form), Store.fs (the log's stream and the store seam: in memory by
+    default, Core's JSONL lines, and a file on .NET only), Session.fs (the sink, replay as Core's fold, restore).
+    References Fuaran.MVU by project, FSharp.Core and the published Fuaran.Core.OpStream; nothing in Fuaran.MVU
+    references this package.
+-->
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <IsPackable>true</IsPackable>
+    <PackageId>Fuaran.MVU.Session</PackageId>
+    <Description>Fuaran.MVU.Session: an optional session log for the Fuaran.MVU runtime. Each decided step is recorded as an op of a Fuaran.Core op-stream, under a disclosure function the host passes (a withheld value is a keyed commitment, a secret is never written); a replay performs nothing and replays the recorded decisions; a restore resumes the runtime, sending idempotent effects again and answering the rest as interrupted. Depends on Fuaran.MVU, FSharp.Core and the published Fuaran.Core.OpStream package.</Description>
+    <PackageTags>fsharp;fable;mvu;session;op-stream;replay</PackageTags>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Commitment.fs" />
+    <Compile Include="Entry.fs" />
+    <Compile Include="Store.fs" />
+    <Compile Include="Session.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Fuaran.MVU/Fuaran.MVU.fsproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="FSharp.Core" />
+    <!-- The log is Core's op-stream: its chain, verifiers, snapshots, compaction and JSONL. Pinned once in
+         Directory.Packages.props. -->
+    <PackageReference Include="Fuaran.Core.OpStream" />
+  </ItemGroup>
+</Project>

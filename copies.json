@@ -1,0 +1,6 @@
+{
+  "kind": "copies",
+  "producer": "fuaran-mvu",
+  "$note": "No copy of any file of the Fuaran.Core proof kit is declared here, by the kit's own rule: the kit arrives as ONE release asset pinned by sha256 in proofs/proofs-kit.json and verified before the leg runs; its templates were copied once and edited (proofs/check.ps1, proofs/modules.json, proofs.json) and are this repository's own from that moment; and on the custard leg nothing else is copied, because the oracle directory holds exactly what the prover writes and the Fable stand-in is derived from it by the leg. Moving to a newer kit is moving the pin.",
+  "records": []
+}

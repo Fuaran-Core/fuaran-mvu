@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Fuaran.MVU.Testing: what an application's tests use. The harness over a scripted interpreter (Harness.fs:
+    effects recorded as values and answered from a table or by the test, resources recorded and emitted
+    through, every view kept) and the laws (Law.fs: determinism, replay). It takes no test framework: each law
+    answers its failures as sentences, which any framework on either host reports. Phase 647. References
+    Fuaran.MVU and FSharp.Core only.
+-->
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <IsPackable>true</IsPackable>
+    <PackageId>Fuaran.MVU.Testing</PackageId>
+    <Description>Fuaran.MVU.Testing: the test harness for Fuaran.MVU components — a runtime over a scripted interpreter that records effects as values and answers them from a table, records resources and emits through them — and the determinism and replay laws. No test framework dependency.</Description>
+    <PackageTags>fsharp;fable;mvu;testing</PackageTags>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Harness.fs" />
+    <Compile Include="Law.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Fuaran.MVU/Fuaran.MVU.fsproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="FSharp.Core" />
+  </ItemGroup>
+</Project>
