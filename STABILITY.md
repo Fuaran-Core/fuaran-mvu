@@ -9,9 +9,9 @@ Every package this repository produces ships at the one `<Version>`. A change to
 contract ships on a version AHEAD of every version that has been tagged. The standing `<Version>` is a
 **draft slot** while it is untagged: an additive change rides it (its entry grows here, the number does
 not move), and a change of a higher class than the draft already carries advances it. A draft is not
-releasable by default: the release is a separate, recorded act. 0.1.0 is the first release; 0.1.1 is the standing draft.
+releasable by default: the release is a separate, recorded act. 0.1.0 is the first release.
 
-## 0.1.1 — draft
+## 0.1.1 — released 2026-11-25 as `v0.1.1`
 
 A fix, with no change of contract. The React adapter hands its view one dispatch function for the life of the
 mount in a Release transpile too, as `Mounted` documents; in 0.1.0 a Release transpile built a new one on every
