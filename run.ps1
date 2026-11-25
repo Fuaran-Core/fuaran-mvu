@@ -24,7 +24,8 @@
                   default; -ProofRuns 3 -Strict is the recorded form.
       6. fable    the kernel under Fable: tests/Fuaran.MVU.Tests/Node transpiled with the repository's `fable`
                   tool and run under Node, the laws and the differential both; then the React adapter's laws
-                  (tests/Fuaran.MVU.React.Tests, in Debug) under Node, and the check that a production (Release)
+                  (tests/Fuaran.MVU.React.Tests) under Node, transpiled in Debug and again in Release (a
+                  production build's configuration), and the check that a production (Release)
                   transpile of Fuaran.MVU.React carries no hot reload; then the browser package's laws
                   (tests/Fuaran.MVU.Browser.Tests) under Node, with its live binding against stubbed globals.
 
@@ -218,6 +219,16 @@ else {
     $global:LASTEXITCODE = 0
     & $node.Source (Join-Path $reactOut "ReactLaws.js")
     Stop-OnFailure "fable (the React adapter's laws under Node)"
+
+    # The same laws transpiled in Release, the configuration of a production build, where Fable optimises more than
+    # in Debug: what a function value's identity is in a consumer's bundle (the view's one dispatch) shows only here.
+    $reactReleaseOut = Join-Path $reactProject "bin" "fable-release"
+    $global:LASTEXITCODE = 0
+    dotnet fable (Join-Path $reactProject "Fuaran.MVU.React.Tests.fsproj") -o $reactReleaseOut -c Release --noCache
+    Stop-OnFailure "fable (transpile tests/Fuaran.MVU.React.Tests, Release)"
+    $global:LASTEXITCODE = 0
+    & $node.Source (Join-Path $reactReleaseOut "ReactLaws.js")
+    Stop-OnFailure "fable (the React adapter's laws under Node, Release)"
 
     $hotReloadMarker = "fuaran-mvu-react:hot-reload"
     foreach ($configuration in @("Release", "Debug")) {

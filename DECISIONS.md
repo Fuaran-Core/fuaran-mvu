@@ -1596,3 +1596,31 @@ What changes with it:
 3. **Publication is a `v*` tag.** `.github/workflows/publish-packages.yml` gates the tagged commit (with the proof
    leg, which needs the prover, run in the release's local gate instead), packs the six packages at the one
    `<Version>`, and pushes them to nuget.org through Trusted Publishing.
+
+## D32 — The view's dispatch is one function value per mount, in every configuration (2026-11-25)
+
+`Mounted` documents the dispatch a view is handed as the mount's one dispatch, and a view may rely on that: it may key
+a memo, an effect's dependencies or a handler cache on the dispatch's identity. In 0.1.0 the mount bound it as a local
+function, used once, inside the function the root calls per render. On .NET that is one closure for the mount's life,
+and so it is in a Debug transpile. A Release transpile by Fable 5 inlined the function at its one use, so the root
+built a new dispatch on every render, and a view keyed on it ran again on every render. A consumer found it in the
+0.1.0 package's `Mount.fs.js`.
+
+The mount now makes the dispatch once and holds it in a reference cell, and each render reads the cell. That is a
+guarantee of the language, not of one compiler's choices: a cell's contents are read where they are used, never
+substituted, so neither compiler may rebuild the function at a render. The other function values React or a view
+keys on were checked in the Release transpile and were already one object each: the store's `Subscribe`,
+`GetSnapshot` and `GetServerSnapshot` are fields set in its constructor and answered by its getters; the root
+component `StoreRoot.root` is a module value; the root's props, `Render` among them, are built once, at the first
+publish; the hot-reload `dispose` that `forget` compares by reference is one binding used at two sites (the hot-reload
+law holds it, in Debug, the only configuration that carries hot reload). `Mounted.Dispatch` is a method, not a value:
+its identity is promised nowhere.
+
+The law `the view is handed one dispatch, the same function value on every render` renders three times and requires
+the identical dispatch each time. The fable stage now runs the React laws transpiled in Release as well as in Debug,
+because the defect shows only in Release: the law passed against the 0.1.0 mount in Debug and on .NET, and failed in
+Release.
+
+Two alternatives lost. **A field on `RootProps` carrying the dispatch** would have held it as surely, but a record
+gaining a field is a breaking change to a released surface, and the cell needs no surface. **A `let mutable` binding**
+is read, not substituted, for the same reason a cell is, but it reads as a value that changes, and this one never does.

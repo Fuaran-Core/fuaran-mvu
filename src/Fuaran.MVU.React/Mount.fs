@@ -111,13 +111,20 @@ module Mount =
         let mutable root: Root option = None
         let mutable unmounted = false
 
-        let dispatch (msg: 'msg) =
-            match running with
-            | Some runtime -> runtime.Dispatch(msg, options.Author) |> ignore
-            | None -> ()
+        // The dispatch the view is handed: one function value for the mount's life, so a view that keys a memo, an
+        // effect's dependencies or a handler cache on its identity sees it change never. It is made once, here, and
+        // held in a reference cell, and every render reads the cell. A cell's contents are read, never substituted:
+        // no compiler may replace `handed.Value` with the lambda it was made from. A local function gives no such
+        // guarantee; a compiler may inline one used once at its use, and Fable 5 in Release did, building a new
+        // function on every render.
+        let handed: ('msg -> unit) ref =
+            ref (fun msg ->
+                match running with
+                | Some runtime -> runtime.Dispatch(msg, options.Author) |> ignore
+                | None -> ())
 
         let renderElement (snapshot: obj) : ReactElement =
-            options.ToElement (unbox<StoreSnapshot<'model, 'view>> snapshot).View dispatch
+            options.ToElement (unbox<StoreSnapshot<'model, 'view>> snapshot).View handed.Value
 
         let render (view: 'view) =
             match running with

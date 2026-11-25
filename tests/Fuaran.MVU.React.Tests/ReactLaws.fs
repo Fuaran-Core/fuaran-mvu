@@ -596,6 +596,31 @@ let cases: Case list = [
 
         expect "and drawn" (c.Markup = "<button>2</button>"))
 
+    // A view may key a memo, an effect's dependencies or a handler cache on the dispatch's identity, so the mount
+    // hands it one function value for the mount's life (DECISIONS.md D32). On .NET and in a Debug transpile a local
+    // function already was one; a Release transpile by Fable 5 inlined it and built a new one per render, which only
+    // this law, run under Node from the Release transpile, can see.
+    case "the view is handed one dispatch, the same function value on every render" (fun expect ->
+        let s = StandIn()
+        let handed = ResizeArray<obj>()
+
+        let view =
+            ElementView.ofView (fun (model: Model) dispatch ->
+                handed.Add(box dispatch)
+                Tag("button", [ Text(string model.Count) ], Some(fun () -> dispatch Inc)) :> ReactElement)
+
+        let m = mountOn s (Container "") { plain with View = view }
+        s.RunTasks()
+        m.Dispatch Inc |> ignore
+        s.Click "button"
+        expect "the view was built on three renders" (handed.Count = 3 && s.Renders "root" = 3)
+
+        expect
+            "against the identical dispatch each time"
+            (handed |> Seq.forall (fun d -> obj.ReferenceEquals(d, handed[0])))
+
+        expect "which reaches the runtime" (countOf m = 2))
+
     case "the slice hook answers the previous slice while it is unchanged" (fun expect ->
         let s = StandIn()
         let reads = ResizeArray<obj>()
