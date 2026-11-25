@@ -10,10 +10,10 @@
     <TreatWarningsAsErrors Condition="'$(MSBuildProjectName)' != 'Custard'">true</TreatWarningsAsErrors>
     <WarningsAsErrors Condition="'$(MSBuildProjectName)' != 'Custard'">$(WarningsAsErrors);FS0025</WarningsAsErrors>
     <WarnOn>3390;$(WarnOn)</WarnOn>
-    <!-- The version every package in this repository ships at. 0.1.0 is a DRAFT slot: untagged, unpublished
+    <!-- The version every package in this repository ships at. 0.1.1 is a DRAFT slot: untagged, unpublished
          and not releasable by default. An additive change rides it; a change of a higher class than the
          draft already carries advances it. STABILITY.md heads the slot and records what it holds. -->
-    <Version>0.1.0</Version>
+    <Version>0.1.1</Version>
     <Authors>Andrew J. Willshire</Authors>
     <Company>Diametrical Ltd</Company>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
